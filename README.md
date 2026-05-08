@@ -59,7 +59,7 @@ http://localhost:4200
 
 ## Estado actual
 
-Actualmente se encuentra en desarrollo la arquitectura base del frontend utilizando Angular 21 y buenas prácticas modernas de desarrollo web.
+Actualmente se encuentra en desarrollo la arquitectura base del frontend.
 
 ## Autor
 

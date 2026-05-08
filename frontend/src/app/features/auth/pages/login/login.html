@@ -1,0 +1,37 @@
+<form class="login" [formGroup]="loginForm" (ngSubmit)="submit()" novalidate>
+  <header class="login__header">
+    <p class="login__eyebrow">TPV RESTAURANTE</p>
+    <h1 class="login__title">Acceso al terminal</h1>
+  </header>
+
+  <fieldset class="login__roles" aria-label="Selecciona tu rol">
+    @for (role of roles; track role) {
+      <button
+        class="login__role"
+        type="button"
+        [class.login__role--selected]="selectedRole() === role"
+        [attr.aria-pressed]="selectedRole() === role"
+        (click)="selectRole(role)"
+      >
+        {{ role }}
+      </button>
+    }
+  </fieldset>
+
+  <label class="login__pin">
+    <span>PIN</span>
+    <input
+      formControlName="pin"
+      inputmode="numeric"
+      autocomplete="one-time-code"
+      maxlength="4"
+      pattern="[0-9]{4}"
+      aria-describedby="pin-hint"
+      (input)="formatPin($event)"
+    />
+  </label>
+
+  <p id="pin-hint" class="login__hint">Introduce los 4 digitos de acceso.</p>
+
+  <button class="login__submit" type="submit">Acceder</button>
+</form>

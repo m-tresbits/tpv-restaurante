@@ -1,0 +1,13 @@
+.layout {
+  min-height: 100vh;
+
+  display: flex;
+
+  background-color: var(--color-background);
+}
+
+.layout__content {
+  flex: 1;
+
+  display: flex;
+}

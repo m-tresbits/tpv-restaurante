@@ -31,7 +31,7 @@
     />
   </label>
 
-  <p id="pin-hint" class="login__hint">Introduce los 4 digitos de acceso.</p>
+  <p id="pin-hint" class="login__hint">Introduce los 4 dígitos de acceso.</p>
 
-  <button class="login__submit" type="submit">Acceder</button>
+  <button class="login__submit" type="submit" [disabled]="loginForm.invalid">Acceder</button>
 </form>

@@ -19,3 +19,7 @@ yarn-error.log*
 # OS
 .DS_Store
 Thumbs.db
+
+# Postman local workspace/config
+.postman/
+postman/

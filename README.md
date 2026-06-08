@@ -1,69 +1,37 @@
 # Sistema TPV para la gestión de un restaurante
 
-Aplicación web TPV desarrollada como Trabajo de Fin de Grado Superior (DAW).
+Aplicación web TPV desarrollada como Trabajo de Fin de Grado Superior del ciclo Desarrollo de Aplicaciones Web (DAW).
 
-El proyecto tiene como objetivo desarrollar un sistema de gestión para restaurantes que permita administrar pedidos, mesas, cocina y stock mediante una arquitectura cliente-servidor.
+El proyecto tiene como objetivo desarrollar un sistema de gestión para restaurantes que permita administrar pedidos, mesas, cocina, carta y stock diario mediante una arquitectura cliente-servidor.
 
 ## Tecnologías utilizadas
 
 ### Frontend
 
-* Angular 21
-* TypeScript
-* SCSS
-* Angular Router
-* Standalone Components
-* Signals
+- Angular 21
+- TypeScript
+- SCSS
+- Angular Router
+- Standalone Components
+- Signals
 
 ### Backend
 
-* NestJS
-* API REST
+- NestJS
+- TypeScript
+- API REST
+- TypeORM
+- Argon2 para generación de hashes de PIN
+- PostgreSQL como base de datos
 
 ### Base de datos
 
-* MySQL
+- Supabase PostgreSQL
+- Scripts SQL de estructura y datos iniciales en la carpeta `database`
 
-## Requisitos del entorno
+## Arquitectura general
 
-Para ejecutar correctamente el frontend se recomienda utilizar:
-
-* Node.js 20.19.5 LTS
-* npm 10.8.2
-
-## Instalación del frontend
-
-Acceder a la carpeta frontend:
-
-```bash
-cd frontend
-```
-
-Instalar dependencias:
-
-```bash
-npm install
-```
-
-Iniciar entorno de desarrollo:
-
-```bash
-npm start
-```
-
-La aplicación estará disponible en:
+El sistema sigue una arquitectura cliente-servidor:
 
 ```text
-http://localhost:4200
-```
-
-## Estado actual
-
-Actualmente se encuentra en desarrollo la arquitectura base del frontend.
-
-## Autor
-
-Max Duchel Casañs
-
-IES Abastos — Desarrollo de Aplicaciones Web (DAW)
-Curso 2025/2026
+Angular → API REST NestJS → Supabase PostgreSQL

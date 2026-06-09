@@ -2,20 +2,18 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 
-/**
- * Roles disponibles en la pantalla de acceso.
- * Se limitan a estos valores para evitar errores al seleccionar o redirigir por rol.
- */
-type AuthRole = 'CAMARERO' | 'ADMIN' | 'COCINA';
+import { AuthApiService, AuthRole } from '../../services/auth-api.service';
 
-/**
- * Relación entre cada rol y la ruta principal a la que debe acceder.
- * De momento se usa como navegación temporal sin autenticación real.
- */
 const ROLE_ROUTES: Record<AuthRole, string> = {
   CAMARERO: '/waiter',
   ADMIN: '/admin',
   COCINA: '/kitchen',
+};
+
+const ROLE_NAMES: Record<AuthRole, string> = {
+  CAMARERO: 'Camarero',
+  ADMIN: 'Administrador',
+  COCINA: 'Cocina',
 };
 
 @Component({
@@ -26,66 +24,64 @@ const ROLE_ROUTES: Record<AuthRole, string> = {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Login {
-  /**
-   * Router de Angular utilizado para navegar a la pantalla correspondiente
-   * cuando el formulario de acceso es válido.
-   */
-  private router = inject(Router);
+  private readonly router = inject(Router);
+  private readonly authApiService = inject(AuthApiService);
 
-  /**
-   * Lista de roles que se muestran como botones en la interfaz.
-   */
-  protected roles: AuthRole[] = ['CAMARERO', 'ADMIN', 'COCINA'];
+  protected readonly roles: AuthRole[] = ['CAMARERO', 'ADMIN', 'COCINA'];
+  protected readonly selectedRole = signal<AuthRole>('CAMARERO');
+  protected readonly loginError = signal<string | null>(null);
+  protected readonly isSubmitting = signal(false);
 
-  /**
-   * Rol seleccionado actualmente por el usuario.
-   * Se usa una signal porque es un estado local simple del componente.
-   */
-  protected selectedRole = signal<AuthRole>('CAMARERO');
-
-  /**
-   * Formulario reactivo del login.
-   * Actualmente solo contiene el PIN, que debe ser obligatorio
-   * y estar formado por exactamente 4 dígitos numéricos.
-   */
-  protected loginForm = new FormGroup({
+  protected readonly loginForm = new FormGroup({
     pin: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required, Validators.pattern(/^\d{4}$/)],
     }),
   });
 
-  /**
-   * Actualiza el rol seleccionado cuando el usuario pulsa uno de los botones.
-   */
   protected selectRole(role: AuthRole): void {
     this.selectedRole.set(role);
+    this.loginError.set(null);
   }
 
-  /**
-   * Normaliza el valor introducido en el campo PIN.
-   * Elimina cualquier carácter que no sea numérico y limita la longitud a 4 dígitos.
-   */
   protected formatPin(event: Event): void {
     const input = event.target as HTMLInputElement;
     const pin = input.value.replace(/\D/g, '').slice(0, 4);
 
     input.value = pin;
+    this.loginError.set(null);
     this.loginForm.controls.pin.setValue(pin, { emitEvent: false });
   }
 
-  /**
-   * Gestiona el envío del formulario.
-   * Si el PIN no es válido, se detiene el proceso.
-   * Si es válido, se redirige al panel correspondiente según el rol seleccionado.
-   */
   protected submit(): void {
     this.loginForm.markAllAsTouched();
+    this.loginError.set(null);
 
-    if (this.loginForm.invalid) {
+    if (this.loginForm.invalid || this.isSubmitting()) {
       return;
     }
 
-    void this.router.navigateByUrl(ROLE_ROUTES[this.selectedRole()]);
+    const role = this.selectedRole();
+
+    this.isSubmitting.set(true);
+
+    this.authApiService
+      .login({
+        nombre: ROLE_NAMES[role],
+        pin: this.loginForm.controls.pin.value,
+      })
+      .subscribe({
+        next: (response) => {
+          localStorage.setItem('accessToken', response.accessToken);
+          localStorage.setItem('userRole', response.usuario.rol);
+
+          void this.router.navigateByUrl(ROLE_ROUTES[response.usuario.rol]);
+        },
+        error: () => {
+          this.loginError.set('PIN incorrecto para el rol seleccionado');
+          this.isSubmitting.set(false);
+          this.loginForm.controls.pin.reset();
+        },
+      });
   }
 }

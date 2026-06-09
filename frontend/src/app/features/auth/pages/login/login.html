@@ -11,6 +11,7 @@
         type="button"
         [class.login__role--selected]="selectedRole() === role"
         [attr.aria-pressed]="selectedRole() === role"
+        [disabled]="isSubmitting()"
         (click)="selectRole(role)"
       >
         {{ role }}
@@ -18,7 +19,7 @@
     }
   </fieldset>
 
-  <label class="login__pin">
+  <label class="login__pin" [class.login__pin--error]="loginError()">
     <span>PIN</span>
     <input
       formControlName="pin"
@@ -33,5 +34,11 @@
 
   <p id="pin-hint" class="login__hint">Introduce los 4 dígitos de acceso.</p>
 
-  <button class="login__submit" type="submit" [disabled]="loginForm.invalid">Acceder</button>
+  @if (loginError()) {
+    <p class="login__error">{{ loginError() }}</p>
+  }
+
+  <button class="login__submit" type="submit" [disabled]="loginForm.invalid || isSubmitting()">
+    {{ isSubmitting() ? 'Accediendo...' : 'Acceder' }}
+  </button>
 </form>

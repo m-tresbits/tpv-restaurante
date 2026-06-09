@@ -19,9 +19,11 @@
     }
   </fieldset>
 
-  <label class="login__pin" [class.login__pin--error]="loginError()">
+  <label class="login__pin" [class.login__pin--error]="loginError()" for="pin">
     <span>PIN</span>
     <input
+      id="pin"
+      name="pin"
       formControlName="pin"
       inputmode="numeric"
       autocomplete="one-time-code"

@@ -1,6 +1,7 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 
+import { AuthRole } from '../services/auth-api.service';
 import { AuthSessionService } from '../services/auth-session.service';
 
 export const authGuard: CanActivateFn = () => {
@@ -18,12 +19,12 @@ export const roleGuard: CanActivateFn = (route) => {
   const router = inject(Router);
   const authSessionService = inject(AuthSessionService);
 
-  const expectedRole = route.data['role'];
-  const currentRole = authSessionService.getRole();
-
   if (!authSessionService.isAuthenticated()) {
     return router.createUrlTree(['/auth/login']);
   }
+
+  const expectedRole = route.data['role'] as AuthRole;
+  const currentRole = authSessionService.getRole();
 
   if (currentRole === expectedRole) {
     return true;
@@ -32,7 +33,18 @@ export const roleGuard: CanActivateFn = (route) => {
   return router.createUrlTree([getRouteByRole(currentRole)]);
 };
 
-function getRouteByRole(role: string | null): string {
+export const guestGuard: CanActivateFn = () => {
+  const router = inject(Router);
+  const authSessionService = inject(AuthSessionService);
+
+  if (!authSessionService.isAuthenticated()) {
+    return true;
+  }
+
+  return router.createUrlTree([getRouteByRole(authSessionService.getRole())]);
+};
+
+function getRouteByRole(role: AuthRole | null): string {
   if (role === 'ADMIN') {
     return '/admin';
   }

@@ -1,5 +1,7 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Router, RouterOutlet } from '@angular/router';
+
+import { AuthSessionService } from '../../features/auth/services/auth-session.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -8,4 +10,14 @@ import { RouterOutlet } from '@angular/router';
   styleUrl: './main-layout.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MainLayout {}
+export class MainLayout {
+  private readonly router = inject(Router);
+  private readonly authSessionService = inject(AuthSessionService);
+
+  protected readonly currentUser = this.authSessionService.currentUser;
+
+  protected logout(): void {
+    this.authSessionService.clearSession();
+    void this.router.navigateByUrl('/auth/login');
+  }
+}

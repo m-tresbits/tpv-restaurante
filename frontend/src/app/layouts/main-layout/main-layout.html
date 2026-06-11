@@ -1,4 +1,16 @@
 <main class="main-layout">
+  <header class="main-layout__header">
+    <div>
+      <p class="main-layout__eyebrow">TPV RESTAURANTE</p>
+
+      @if (currentUser(); as user) {
+        <p class="main-layout__user">{{ user.nombre }} · {{ user.rol }}</p>
+      }
+    </div>
+
+    <button class="main-layout__logout" type="button" (click)="logout()">Cerrar sesión</button>
+  </header>
+
   <section class="main-layout__content" aria-label="Contenido principal del TPV">
     <router-outlet />
   </section>

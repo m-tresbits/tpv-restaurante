@@ -3,6 +3,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router } from '@angular/router';
 
 import { AuthApiService, AuthRole } from '../../services/auth-api.service';
+import { AuthSessionService } from '../../services/auth-session.service';
 
 const ROLE_ROUTES: Record<AuthRole, string> = {
   CAMARERO: '/waiter',
@@ -26,6 +27,7 @@ const ROLE_NAMES: Record<AuthRole, string> = {
 export class Login {
   private readonly router = inject(Router);
   private readonly authApiService = inject(AuthApiService);
+  private readonly authSessionService = inject(AuthSessionService);
 
   protected readonly roles: AuthRole[] = ['CAMARERO', 'ADMIN', 'COCINA'];
   protected readonly selectedRole = signal<AuthRole>('CAMARERO');
@@ -72,8 +74,7 @@ export class Login {
       })
       .subscribe({
         next: (response) => {
-          localStorage.setItem('accessToken', response.accessToken);
-          localStorage.setItem('userRole', response.usuario.rol);
+          this.authSessionService.saveSession(response);
 
           void this.router.navigateByUrl(ROLE_ROUTES[response.usuario.rol]);
         },

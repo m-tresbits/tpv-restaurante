@@ -1,4 +1,79 @@
 .admin-home {
   display: grid;
+  gap: var(--space-6);
+}
+
+.admin-home__header {
+  display: grid;
   gap: var(--space-3);
+}
+
+.admin-home__header h1 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: clamp(2rem, 5vw, 3rem);
+  line-height: 1.1;
+}
+
+.admin-home__header p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
+}
+
+.admin-home__card {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 34rem;
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.admin-home__card h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1.25rem;
+}
+
+.admin-home__status {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.admin-home__error {
+  margin: 0;
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.admin-home__roles {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-home__role {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+}
+
+.admin-home__role span {
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.admin-home__role small {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
 }

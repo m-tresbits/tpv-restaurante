@@ -1,4 +1,25 @@
 <section class="admin-home">
-  <h1>Panel de administración</h1>
-  <p>Área destinada a la gestión de usuarios, carta y stock del restaurante.</p>
+  <header class="admin-home__header">
+    <h1>Panel de administración</h1>
+    <p>Área destinada a la gestión de usuarios, carta y stock del restaurante.</p>
+  </header>
+
+  <section class="admin-home__card">
+    <h2>Roles del sistema</h2>
+
+    @if (isLoadingRoles()) {
+      <p class="admin-home__status">Cargando roles...</p>
+    } @else if (rolesError()) {
+      <p class="admin-home__error">{{ rolesError() }}</p>
+    } @else {
+      <ul class="admin-home__roles">
+        @for (role of roles(); track role.id) {
+          <li class="admin-home__role">
+            <span>{{ role.nombre }}</span>
+            <small>ID: {{ role.id }}</small>
+          </li>
+        }
+      </ul>
+    }
+  </section>
 </section>

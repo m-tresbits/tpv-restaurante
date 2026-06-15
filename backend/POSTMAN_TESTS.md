@@ -208,6 +208,90 @@ PATCH http://localhost:3000/products/1
 
 ---
 
+## Tables
+
+ADMIN obtiene todas las mesas.
+
+```http
+GET http://localhost:3000/tables
+```
+
+ADMIN o CAMARERO obtiene solo las mesas activas.
+
+```http
+GET http://localhost:3000/tables/active
+```
+
+ADMIN o CAMARERO obtiene una mesa por id.
+
+```http
+GET http://localhost:3000/tables/1
+```
+
+ADMIN crea una mesa.
+
+```http
+POST http://localhost:3000/tables
+```
+
+```json
+{
+  "numero": 1,
+  "capacidad": 4
+}
+```
+
+ADMIN edita una mesa.
+
+```http
+PATCH http://localhost:3000/tables/1
+```
+
+```json
+{
+  "capacidad": 6
+}
+```
+
+ADMIN o CAMARERO cambia el estado de una mesa.
+
+```http
+PATCH http://localhost:3000/tables/1/status
+```
+
+```json
+{
+  "estado": "OCUPADA"
+}
+```
+
+ADMIN o CAMARERO libera una mesa.
+
+```http
+PATCH http://localhost:3000/tables/1/status
+```
+
+```json
+{
+  "estado": "LIBRE"
+}
+```
+
+CAMARERO intenta crear una mesa. Resultado esperado: `403 Forbidden`.
+
+```http
+POST http://localhost:3000/tables
+```
+
+```json
+{
+  "numero": 99,
+  "capacidad": 2
+}
+```
+
+---
+
 ## Notes
 
 Cambiar los ids `1` y `6` por ids reales de la base de datos.

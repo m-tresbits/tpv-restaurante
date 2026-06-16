@@ -17,15 +17,27 @@ export class TablesApiService {
   private readonly http = inject(HttpClient);
 
   findAll(): Observable<RestaurantTable[]> {
-    return this.http.get<RestaurantTable[]>(`${API_BASE_URL}/tables`);
+    return this.http.get<RestaurantTable[]>(`${API_BASE_URL}/tables`, {
+      params: {
+        t: Date.now().toString(),
+      },
+    });
   }
 
   findAvailable(): Observable<RestaurantTable[]> {
-    return this.http.get<RestaurantTable[]>(`${API_BASE_URL}/tables/available`);
+    return this.http.get<RestaurantTable[]>(`${API_BASE_URL}/tables/available`, {
+      params: {
+        t: Date.now().toString(),
+      },
+    });
   }
 
   findById(id: number): Observable<RestaurantTable> {
-    return this.http.get<RestaurantTable>(`${API_BASE_URL}/tables/${id}`);
+    return this.http.get<RestaurantTable>(`${API_BASE_URL}/tables/${id}`, {
+      params: {
+        t: Date.now().toString(),
+      },
+    });
   }
 
   create(table: CreateTableRequest): Observable<RestaurantTable> {

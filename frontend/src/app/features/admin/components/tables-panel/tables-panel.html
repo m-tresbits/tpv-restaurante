@@ -70,7 +70,7 @@
               <select
                 [value]="table.estado"
                 [disabled]="isSaving()"
-                (change)="updateStatus(table.id, $any($event.target).value)"
+                (change)="updateStatusFromEvent(table.id, $event)"
               >
                 @for (status of statuses; track status) {
                   <option [value]="status">

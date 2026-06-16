@@ -20,6 +20,7 @@ import {
 export class TablesPanel {
   readonly tables = input.required<RestaurantTable[]>();
   readonly tablesChanged = output<void>();
+  readonly tableUpdated = output<RestaurantTable>();
 
   private readonly tablesApiService = inject(TablesApiService);
 
@@ -113,14 +114,14 @@ export class TablesPanel {
     this.errorMessage.set(null);
 
     this.tablesApiService.update(tableId, request).subscribe({
-      next: () => {
+      next: (updatedTable) => {
         this.editingTableId.set(null);
         this.editForm.reset({
           numero: 1,
           capacidad: 2,
         });
         this.isSaving.set(false);
-        this.tablesChanged.emit();
+        this.tableUpdated.emit(updatedTable);
       },
       error: () => {
         this.errorMessage.set('No se ha podido actualizar la mesa.');
@@ -129,7 +130,12 @@ export class TablesPanel {
     });
   }
 
-  protected updateStatus(tableId: number, estado: TableStatus): void {
+  protected updateStatusFromEvent(tableId: number, event: Event): void {
+    const estado = (event.target as HTMLSelectElement).value as TableStatus;
+    this.updateStatus(tableId, estado);
+  }
+
+  private updateStatus(tableId: number, estado: TableStatus): void {
     if (this.isSaving()) {
       return;
     }
@@ -142,9 +148,9 @@ export class TablesPanel {
     this.errorMessage.set(null);
 
     this.tablesApiService.updateStatus(tableId, request).subscribe({
-      next: () => {
+      next: (updatedTable) => {
         this.isSaving.set(false);
-        this.tablesChanged.emit();
+        this.tableUpdated.emit(updatedTable);
       },
       error: () => {
         this.errorMessage.set('No se ha podido actualizar el estado de la mesa.');

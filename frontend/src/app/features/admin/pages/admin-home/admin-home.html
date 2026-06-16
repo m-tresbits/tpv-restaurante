@@ -107,7 +107,11 @@
       }
 
       @if (activeSection() === 'tables') {
-        <app-tables-panel [tables]="tables()" (tablesChanged)="reload()"></app-tables-panel>
+        <app-tables-panel
+          [tables]="tables()"
+          (tablesChanged)="reload()"
+          (tableUpdated)="replaceTable($event)"
+        ></app-tables-panel>
       }
 
       @if (activeSection() === 'stock') {

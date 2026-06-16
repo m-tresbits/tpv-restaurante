@@ -51,6 +51,12 @@ export class AdminHome implements OnInit {
     this.loadDashboard();
   }
 
+  protected replaceTable(updatedTable: RestaurantTable): void {
+    this.tables.update((tables) =>
+      tables.map((table) => (table.id === updatedTable.id ? updatedTable : table)),
+    );
+  }
+
   protected activeCategoriesCount(): number {
     return this.categories().filter((category) => category.activo).length;
   }

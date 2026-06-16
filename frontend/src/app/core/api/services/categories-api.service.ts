@@ -16,11 +16,27 @@ export class CategoriesApiService {
   private readonly http = inject(HttpClient);
 
   findAll(): Observable<Category[]> {
-    return this.http.get<Category[]>(`${API_BASE_URL}/categories`);
+    return this.http.get<Category[]>(`${API_BASE_URL}/categories`, {
+      params: {
+        t: Date.now().toString(),
+      },
+    });
   }
 
   findActive(): Observable<Category[]> {
-    return this.http.get<Category[]>(`${API_BASE_URL}/categories/active`);
+    return this.http.get<Category[]>(`${API_BASE_URL}/categories/active`, {
+      params: {
+        t: Date.now().toString(),
+      },
+    });
+  }
+
+  findById(id: number): Observable<Category> {
+    return this.http.get<Category>(`${API_BASE_URL}/categories/${id}`, {
+      params: {
+        t: Date.now().toString(),
+      },
+    });
   }
 
   create(category: CreateCategoryRequest): Observable<Category> {

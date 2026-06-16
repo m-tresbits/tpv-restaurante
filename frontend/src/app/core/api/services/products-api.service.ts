@@ -16,15 +16,27 @@ export class ProductsApiService {
   private readonly http = inject(HttpClient);
 
   findAll(): Observable<Product[]> {
-    return this.http.get<Product[]>(`${API_BASE_URL}/products`);
+    return this.http.get<Product[]>(`${API_BASE_URL}/products`, {
+      params: {
+        t: Date.now().toString(),
+      },
+    });
   }
 
   findAvailable(): Observable<Product[]> {
-    return this.http.get<Product[]>(`${API_BASE_URL}/products/available`);
+    return this.http.get<Product[]>(`${API_BASE_URL}/products/available`, {
+      params: {
+        t: Date.now().toString(),
+      },
+    });
   }
 
   findById(id: number): Observable<Product> {
-    return this.http.get<Product>(`${API_BASE_URL}/products/${id}`);
+    return this.http.get<Product>(`${API_BASE_URL}/products/${id}`, {
+      params: {
+        t: Date.now().toString(),
+      },
+    });
   }
 
   create(product: CreateProductRequest): Observable<Product> {

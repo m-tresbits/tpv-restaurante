@@ -320,6 +320,34 @@ POST http://localhost:3000/orders/1/items
 }
 ```
 
+CAMARERO intenta añadir un producto sin stock diario configurado. Resultado esperado: `400 Bad Request`.
+
+```http
+POST http://localhost:3000/orders/1/items
+```
+
+```json
+{
+  "productoId": 1,
+  "cantidad": 2,
+  "observaciones": "Sin stock configurado"
+}
+```
+
+CAMARERO intenta añadir más cantidad que el stock disponible. Resultado esperado: `400 Bad Request`.
+
+```http
+POST http://localhost:3000/orders/1/items
+```
+
+```json
+{
+  "productoId": 1,
+  "cantidad": 999,
+  "observaciones": "Más cantidad que stock disponible"
+}
+```
+
 CAMARERO envía el pedido a cocina.
 
 ```http
@@ -445,7 +473,7 @@ ADMIN, CAMARERO o COCINA obtiene el stock de un producto en una fecha.
 GET http://localhost:3000/stock/product/1/date/2026-06-16
 ```
 
-ADMIN crea o actualiza el stock diario de un producto.
+ADMIN crea o actualiza el stock diario de un producto antes de usarlo en pedidos.
 
 ```http
 POST http://localhost:3000/stock/daily

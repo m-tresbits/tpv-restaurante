@@ -7,13 +7,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 
 import { Product } from '../products/product.entity';
+import { StockService } from '../stock/stock.service';
 import { RestaurantTable } from '../tables/table.entity';
 import { User } from '../users/user.entity';
 import { AddOrderItemDto } from './dto/add-order-item.dto';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { UpdateOrderDetailStatusDto } from './dto/update-order-detail-status.dto';
 import { OrderDetail } from './order-detail.entity';
 import { Order } from './order.entity';
-import { UpdateOrderDetailStatusDto } from './dto/update-order-detail-status.dto';
 
 @Injectable()
 export class OrdersService {
@@ -28,6 +29,7 @@ export class OrdersService {
     private readonly productsRepository: Repository<Product>,
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    private readonly stockService: StockService,
   ) {}
 
   findOpen() {
@@ -125,6 +127,9 @@ export class OrdersService {
     }
 
     const quantity = this.normalizeQuantity(addOrderItemDto.cantidad);
+    const stockDate = this.getStockDateFromOrder(order);
+
+    await this.stockService.decreaseDailyStock(product.id, quantity, stockDate);
 
     const detail = this.orderDetailsRepository.create({
       order,
@@ -137,6 +142,30 @@ export class OrdersService {
 
     await this.orderDetailsRepository.save(detail);
     await this.updateTotal(order.id);
+
+    return this.findOne(order.id);
+  }
+
+  async sendToKitchen(id: number) {
+    const order = await this.findOne(id);
+
+    if (order.estado !== 'ABIERTO') {
+      throw new BadRequestException(
+        'Solo se pueden enviar a cocina pedidos abiertos',
+      );
+    }
+
+    const details = await this.findDetailsByOrderId(order.id);
+
+    if (details.length === 0) {
+      throw new BadRequestException(
+        'No se puede enviar a cocina un pedido sin productos',
+      );
+    }
+
+    order.estado = 'EN_COCINA';
+
+    await this.ordersRepository.save(order);
 
     return this.findOne(order.id);
   }
@@ -188,30 +217,6 @@ export class OrdersService {
     return this.findOne(order.id);
   }
 
-  async sendToKitchen(id: number) {
-    const order = await this.findOne(id);
-
-    if (order.estado !== 'ABIERTO') {
-      throw new BadRequestException(
-        'Solo se pueden enviar a cocina pedidos abiertos',
-      );
-    }
-
-    const details = await this.findDetailsByOrderId(order.id);
-
-    if (details.length === 0) {
-      throw new BadRequestException(
-        'No se puede enviar a cocina un pedido sin productos',
-      );
-    }
-
-    order.estado = 'EN_COCINA';
-
-    await this.ordersRepository.save(order);
-
-    return this.findOne(order.id);
-  }
-
   async close(id: number) {
     const order = await this.findOne(id);
 
@@ -243,8 +248,17 @@ export class OrdersService {
     await this.ordersRepository.save(order);
 
     const details = await this.findDetailsByOrderId(order.id);
+    const stockDate = this.getStockDateFromOrder(order);
 
     for (const detail of details) {
+      if (detail.estado !== 'CANCELADO') {
+        await this.stockService.increaseDailyStock(
+          detail.product.id,
+          detail.cantidad,
+          stockDate,
+        );
+      }
+
       detail.estado = 'CANCELADO';
       await this.orderDetailsRepository.save(detail);
     }
@@ -324,6 +338,10 @@ export class OrdersService {
         product: true,
       },
     });
+  }
+
+  private getStockDateFromOrder(order: Order): string {
+    return order.fechaCreacion.toISOString().slice(0, 10);
   }
 
   private normalizeQuantity(quantity: number) {

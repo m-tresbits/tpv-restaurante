@@ -1,4 +1,4 @@
-.categories-panel {
+.tables-panel {
   display: grid;
   gap: var(--space-3);
   padding: var(--space-4);
@@ -8,56 +8,58 @@
   box-shadow: var(--shadow-sm);
 }
 
-.categories-panel__header {
+.tables-panel__header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-3);
 }
 
-.categories-panel__header h2 {
+.tables-panel__header h2 {
   margin: 0;
   color: var(--color-text);
   font-size: 1.25rem;
 }
 
-.categories-panel__header p {
+.tables-panel__header p {
   margin: var(--space-1) 0 0;
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
 }
 
-.categories-panel__form,
-.categories-panel__edit-form {
+.tables-panel__form,
+.tables-panel__edit-form {
   display: grid;
   gap: var(--space-2);
 }
 
-.categories-panel__form label {
+.tables-panel__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 10rem));
+  gap: var(--space-2);
+}
+
+.tables-panel label {
+  display: grid;
+  gap: var(--space-1);
   color: var(--color-text);
   font-size: var(--font-size-sm);
   font-weight: 700;
 }
 
-.categories-panel__form-row,
-.categories-panel__edit-form,
-.categories-panel__content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-}
-
-.categories-panel input {
+.tables-panel input,
+.tables-panel select {
   width: 100%;
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: white;
   color: var(--color-text);
+  font-size: var(--font-size-sm);
 }
 
-.categories-panel button {
+.tables-panel button {
+  width: fit-content;
   padding: var(--space-2) var(--space-3);
   border: 0;
   border-radius: var(--radius-sm);
@@ -68,75 +70,93 @@
   cursor: pointer;
 }
 
-.categories-panel button:disabled {
+.tables-panel button:disabled,
+.tables-panel select:disabled {
   cursor: not-allowed;
   opacity: 0.6;
 }
 
-.categories-panel__button--ghost {
+.tables-panel__button--ghost {
   border: 1px solid var(--color-border) !important;
   background: transparent !important;
   color: var(--color-text) !important;
 }
 
-.categories-panel__button--danger {
-  background: #b91c1c !important;
-}
-
-.categories-panel__validation,
-.categories-panel__error,
-.categories-panel__empty {
+.tables-panel__validation,
+.tables-panel__error,
+.tables-panel__empty {
   margin: 0;
   font-size: var(--font-size-sm);
 }
 
-.categories-panel__validation,
-.categories-panel__error {
+.tables-panel__validation,
+.tables-panel__error {
   color: #b91c1c;
   font-weight: 600;
 }
 
-.categories-panel__list {
+.tables-panel__list {
   display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
   gap: var(--space-2);
 }
 
-.categories-panel__item {
+.tables-panel__item {
   padding: var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface-muted);
 }
 
-.categories-panel__content > div:first-child {
+.tables-panel__content {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.tables-panel__content > div:first-child {
   display: grid;
   gap: var(--space-1);
 }
 
-.categories-panel__content strong {
+.tables-panel__content strong {
   color: var(--color-text);
+  font-size: 1rem;
 }
 
-.categories-panel__content small {
+.tables-panel__content span {
   color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
 }
 
-.categories-panel__actions {
+.tables-panel__status {
+  min-width: 8rem;
+  font-size: var(--font-size-sm);
+}
+
+.tables-panel__actions {
   display: flex;
   align-items: center;
   gap: var(--space-2);
 }
 
-.categories-panel__empty {
+.tables-panel__empty {
   color: var(--color-text-muted);
 }
 
 @media (max-width: 700px) {
-  .categories-panel__form-row,
-  .categories-panel__edit-form,
-  .categories-panel__content,
-  .categories-panel__actions {
+  .tables-panel__grid,
+  .tables-panel__content {
+    grid-template-columns: 1fr;
+  }
+
+  .tables-panel__actions {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .tables-panel button {
+    width: 100%;
   }
 }

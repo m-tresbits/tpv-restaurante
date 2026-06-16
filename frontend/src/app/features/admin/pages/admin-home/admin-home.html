@@ -1,81 +1,121 @@
 <section class="admin-home">
-  <header class="admin-home__header">
-    <div>
-      <h1>Panel de administración</h1>
-      <p>Área destinada a la gestión de carta, mesas y stock diario del restaurante.</p>
+  <aside class="admin-home__sidebar">
+    <div class="admin-home__brand">
+      <span>TPV</span>
+      <small>Administración</small>
     </div>
 
-    <button type="button" class="admin-home__refresh" (click)="reload()">Actualizar</button>
-  </header>
+    <nav class="admin-home__nav" aria-label="Navegación de administración">
+      <button
+        type="button"
+        [class.admin-home__nav-button--active]="activeSection() === 'dashboard'"
+        (click)="selectSection('dashboard')"
+      >
+        Resumen
+      </button>
 
-  @if (isLoading()) {
-    <p class="admin-home__status">Cargando datos de administración...</p>
-  } @else if (errorMessage()) {
-    <p class="admin-home__error">{{ errorMessage() }}</p>
-  } @else {
-    <section class="admin-home__summary">
-      <article class="admin-home__card">
-        <span>Categorías</span>
-        <strong>{{ categories().length }}</strong>
-        <small>{{ activeCategoriesCount() }} activas</small>
-      </article>
+      <button
+        type="button"
+        [class.admin-home__nav-button--active]="activeSection() === 'categories'"
+        (click)="selectSection('categories')"
+      >
+        Categorías
+      </button>
 
-      <article class="admin-home__card">
-        <span>Productos</span>
-        <strong>{{ products().length }}</strong>
-        <small>{{ activeProductsCount() }} disponibles</small>
-      </article>
+      <button
+        type="button"
+        [class.admin-home__nav-button--active]="activeSection() === 'products'"
+        (click)="selectSection('products')"
+      >
+        Productos
+      </button>
 
-      <article class="admin-home__card">
-        <span>Mesas</span>
-        <strong>{{ tables().length }}</strong>
-        <small>{{ freeTablesCount() }} libres</small>
-      </article>
+      <button
+        type="button"
+        [class.admin-home__nav-button--active]="activeSection() === 'tables'"
+        (click)="selectSection('tables')"
+      >
+        Mesas
+      </button>
 
-      <article class="admin-home__card">
-        <span>Stock diario</span>
-        <strong>{{ stock().length }}</strong>
-        <small>registros configurados</small>
-      </article>
-    </section>
+      <button
+        type="button"
+        [class.admin-home__nav-button--active]="activeSection() === 'stock'"
+        (click)="selectSection('stock')"
+      >
+        Stock diario
+      </button>
+    </nav>
+  </aside>
 
-    <app-categories-panel [categories]="categories()" (categoriesChanged)="reload()" />
-
-    <section class="admin-home__section">
-      <h2>Carta</h2>
-
-      <div class="admin-home__list">
-        @for (product of products(); track product.id) {
-          <article class="admin-home__item">
-            <div>
-              <strong>{{ product.nombre }}</strong>
-              <span>{{ product.category.nombre }}</span>
-            </div>
-
-            <div class="admin-home__item-meta">
-              <span>{{ product.precio }} €</span>
-              <small>{{ product.activo ? 'Disponible' : 'Inactivo' }}</small>
-            </div>
-          </article>
-        }
+  <main class="admin-home__main">
+    <header class="admin-home__header">
+      <div>
+        <h1>Panel de administración</h1>
+        <p>Área destinada a la gestión de carta, mesas y stock diario del restaurante.</p>
       </div>
-    </section>
 
-    <section class="admin-home__section">
-      <h2>Mesas</h2>
+      <button type="button" class="admin-home__refresh" (click)="reload()">Actualizar</button>
+    </header>
 
-      <div class="admin-home__list admin-home__list--compact">
-        @for (table of tables(); track table.id) {
-          <article class="admin-home__item">
-            <div>
-              <strong>Mesa {{ table.numero }}</strong>
-              <span>Capacidad: {{ table.capacidad }}</span>
-            </div>
-
-            <small>{{ table.estado }}</small>
+    @if (isLoading()) {
+      <p class="admin-home__status">Cargando datos de administración...</p>
+    } @else if (errorMessage()) {
+      <p class="admin-home__error">{{ errorMessage() }}</p>
+    } @else {
+      @if (activeSection() === 'dashboard') {
+        <section class="admin-home__summary">
+          <article class="admin-home__card">
+            <span>Categorías</span>
+            <strong>{{ categories().length }}</strong>
+            <small>{{ activeCategoriesCount() }} activas</small>
           </article>
-        }
-      </div>
-    </section>
-  }
+
+          <article class="admin-home__card">
+            <span>Productos</span>
+            <strong>{{ products().length }}</strong>
+            <small>{{ activeProductsCount() }} disponibles</small>
+          </article>
+
+          <article class="admin-home__card">
+            <span>Mesas</span>
+            <strong>{{ tables().length }}</strong>
+            <small>{{ freeTablesCount() }} libres</small>
+          </article>
+
+          <article class="admin-home__card">
+            <span>Stock diario</span>
+            <strong>{{ stock().length }}</strong>
+            <small>registros configurados</small>
+          </article>
+        </section>
+      }
+
+      @if (activeSection() === 'categories') {
+        <app-categories-panel
+          [categories]="categories()"
+          (categoriesChanged)="reload()"
+        ></app-categories-panel>
+      }
+
+      @if (activeSection() === 'products') {
+        <app-products-panel
+          [products]="products()"
+          [categories]="categories()"
+          (productsChanged)="reload()"
+        ></app-products-panel>
+      }
+
+      @if (activeSection() === 'tables') {
+        <app-tables-panel [tables]="tables()" (tablesChanged)="reload()"></app-tables-panel>
+      }
+
+      @if (activeSection() === 'stock') {
+        <section class="admin-home__placeholder">
+          <h2>Stock diario</h2>
+          <p>Esta sección se utilizará para configurar la disponibilidad diaria de productos.</p>
+        </section>
+      }
+    }
+  </main>
 </section>

@@ -2,13 +2,13 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { API_BASE_URL } from '../../../core/api/api.config';
 import {
   CreateTableRequest,
   RestaurantTable,
   UpdateTableRequest,
   UpdateTableStatusRequest,
 } from '../../../shared/models/table.model';
+import { API_BASE_URL } from '../api.config';
 
 @Injectable({
   providedIn: 'root',
@@ -20,8 +20,8 @@ export class TablesApiService {
     return this.http.get<RestaurantTable[]>(`${API_BASE_URL}/tables`);
   }
 
-  findActive(): Observable<RestaurantTable[]> {
-    return this.http.get<RestaurantTable[]>(`${API_BASE_URL}/tables/active`);
+  findAvailable(): Observable<RestaurantTable[]> {
+    return this.http.get<RestaurantTable[]>(`${API_BASE_URL}/tables/available`);
   }
 
   findById(id: number): Observable<RestaurantTable> {

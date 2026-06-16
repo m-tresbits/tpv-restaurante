@@ -10,10 +10,14 @@ import { Product } from '../../../../shared/models/product.model';
 import { DailyStock } from '../../../../shared/models/stock.model';
 import { RestaurantTable } from '../../../../shared/models/table.model';
 import { CategoriesPanel } from '../../components/categories-panel/categories-panel';
+import { ProductsPanel } from '../../components/products-panel/products-panel';
+import { TablesPanel } from '../../components/tables-panel/tables-panel';
+
+type AdminSection = 'dashboard' | 'categories' | 'products' | 'tables' | 'stock';
 
 @Component({
   selector: 'app-admin-home',
-  imports: [CategoriesPanel],
+  imports: [CategoriesPanel, ProductsPanel, TablesPanel],
   templateUrl: './admin-home.html',
   styleUrl: './admin-home.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -23,6 +27,8 @@ export class AdminHome implements OnInit {
   private readonly productsApiService = inject(ProductsApiService);
   private readonly tablesApiService = inject(TablesApiService);
   private readonly stockApiService = inject(StockApiService);
+
+  protected readonly activeSection = signal<AdminSection>('dashboard');
 
   protected readonly categories = signal<Category[]>([]);
   protected readonly products = signal<Product[]>([]);
@@ -34,6 +40,10 @@ export class AdminHome implements OnInit {
 
   ngOnInit(): void {
     this.loadDashboard();
+  }
+
+  protected selectSection(section: AdminSection): void {
+    this.activeSection.set(section);
   }
 
   protected reload(): void {

@@ -1,0 +1,93 @@
+<section class="tables-panel">
+  <header class="tables-panel__header">
+    <div>
+      <h2>Mesas</h2>
+      <p>Gestión de las mesas disponibles en la sala del restaurante.</p>
+    </div>
+  </header>
+
+  <form class="tables-panel__form" [formGroup]="createForm" (ngSubmit)="createTable()">
+    <div class="tables-panel__grid">
+      <label>
+        Número
+        <input type="number" min="1" formControlName="numero" />
+      </label>
+
+      <label>
+        Capacidad
+        <input type="number" min="1" formControlName="capacidad" />
+      </label>
+    </div>
+
+    <button type="submit" [disabled]="isSaving()">Crear mesa</button>
+
+    @if (createForm.invalid && createForm.touched) {
+      <p class="tables-panel__validation">Revisa el número y la capacidad de la mesa.</p>
+    }
+  </form>
+
+  @if (errorMessage()) {
+    <p class="tables-panel__error">{{ errorMessage() }}</p>
+  }
+
+  <div class="tables-panel__list">
+    @for (table of tables(); track table.id) {
+      <article class="tables-panel__item">
+        @if (editingTableId() === table.id) {
+          <form
+            class="tables-panel__edit-form"
+            [formGroup]="editForm"
+            (ngSubmit)="updateTable(table.id)"
+          >
+            <div class="tables-panel__grid">
+              <label>
+                Número
+                <input type="number" min="1" formControlName="numero" />
+              </label>
+
+              <label>
+                Capacidad
+                <input type="number" min="1" formControlName="capacidad" />
+              </label>
+            </div>
+
+            <div class="tables-panel__actions">
+              <button type="submit" [disabled]="isSaving()">Guardar</button>
+              <button type="button" class="tables-panel__button--ghost" (click)="cancelEdit()">
+                Cancelar
+              </button>
+            </div>
+          </form>
+        } @else {
+          <div class="tables-panel__content">
+            <div>
+              <strong>Mesa {{ table.numero }}</strong>
+              <span>Capacidad: {{ table.capacidad }}</span>
+            </div>
+
+            <label class="tables-panel__status">
+              Estado
+              <select
+                [value]="table.estado"
+                [disabled]="isSaving()"
+                (change)="updateStatus(table.id, $any($event.target).value)"
+              >
+                @for (status of statuses; track status) {
+                  <option [value]="status">
+                    {{ status }}
+                  </option>
+                }
+              </select>
+            </label>
+
+            <div class="tables-panel__actions">
+              <button type="button" (click)="startEdit(table)">Editar</button>
+            </div>
+          </div>
+        }
+      </article>
+    } @empty {
+      <p class="tables-panel__empty">No hay mesas registradas.</p>
+    }
+  </div>
+</section>

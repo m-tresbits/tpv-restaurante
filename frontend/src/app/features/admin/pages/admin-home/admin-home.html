@@ -1,25 +1,79 @@
 <section class="admin-home">
   <header class="admin-home__header">
-    <h1>Panel de administración</h1>
-    <p>Área destinada a la gestión de usuarios, carta y stock del restaurante.</p>
+    <div>
+      <h1>Panel de administración</h1>
+      <p>Área destinada a la gestión de carta, mesas y stock diario del restaurante.</p>
+    </div>
+
+    <button type="button" class="admin-home__refresh" (click)="reload()">Actualizar</button>
   </header>
 
-  <section class="admin-home__card">
-    <h2>Roles del sistema</h2>
+  @if (isLoading()) {
+    <p class="admin-home__status">Cargando datos de administración...</p>
+  } @else if (errorMessage()) {
+    <p class="admin-home__error">{{ errorMessage() }}</p>
+  } @else {
+    <section class="admin-home__summary">
+      <article class="admin-home__card">
+        <span>Categorías</span>
+        <strong>{{ categories().length }}</strong>
+        <small>{{ activeCategoriesCount() }} activas</small>
+      </article>
 
-    @if (isLoadingRoles()) {
-      <p class="admin-home__status">Cargando roles...</p>
-    } @else if (rolesError()) {
-      <p class="admin-home__error">{{ rolesError() }}</p>
-    } @else {
-      <ul class="admin-home__roles">
-        @for (role of roles(); track role.id) {
-          <li class="admin-home__role">
-            <span>{{ role.nombre }}</span>
-            <small>ID: {{ role.id }}</small>
-          </li>
+      <article class="admin-home__card">
+        <span>Productos</span>
+        <strong>{{ products().length }}</strong>
+        <small>{{ activeProductsCount() }} disponibles</small>
+      </article>
+
+      <article class="admin-home__card">
+        <span>Mesas</span>
+        <strong>{{ tables().length }}</strong>
+        <small>{{ freeTablesCount() }} libres</small>
+      </article>
+
+      <article class="admin-home__card">
+        <span>Stock diario</span>
+        <strong>{{ stock().length }}</strong>
+        <small>registros configurados</small>
+      </article>
+    </section>
+
+    <section class="admin-home__section">
+      <h2>Carta</h2>
+
+      <div class="admin-home__list">
+        @for (product of products(); track product.id) {
+          <article class="admin-home__item">
+            <div>
+              <strong>{{ product.nombre }}</strong>
+              <span>{{ product.category.nombre }}</span>
+            </div>
+
+            <div class="admin-home__item-meta">
+              <span>{{ product.precio }} €</span>
+              <small>{{ product.activo ? 'Disponible' : 'Inactivo' }}</small>
+            </div>
+          </article>
         }
-      </ul>
-    }
-  </section>
+      </div>
+    </section>
+
+    <section class="admin-home__section">
+      <h2>Mesas</h2>
+
+      <div class="admin-home__list admin-home__list--compact">
+        @for (table of tables(); track table.id) {
+          <article class="admin-home__item">
+            <div>
+              <strong>Mesa {{ table.numero }}</strong>
+              <span>Capacidad: {{ table.capacidad }}</span>
+            </div>
+
+            <small>{{ table.estado }}</small>
+          </article>
+        }
+      </div>
+    </section>
+  }
 </section>

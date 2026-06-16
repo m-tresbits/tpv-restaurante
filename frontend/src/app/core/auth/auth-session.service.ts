@@ -1,12 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 
-import { AuthRole, LoginResponse } from './auth-api.service';
-
-export type AuthUser = {
-  id: number;
-  nombre: string;
-  rol: AuthRole;
-};
+import { AuthRole, AuthUser, LoginResponse } from '../../shared/models/auth.model';
 
 @Injectable({
   providedIn: 'root',

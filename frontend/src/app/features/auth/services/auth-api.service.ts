@@ -3,22 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { API_BASE_URL } from '../../../core/api/api.config';
-
-export type AuthRole = 'ADMIN' | 'CAMARERO' | 'COCINA';
-
-export type LoginRequest = {
-  nombre: string;
-  pin: string;
-};
-
-export type LoginResponse = {
-  accessToken: string;
-  usuario: {
-    id: number;
-    nombre: string;
-    rol: AuthRole;
-  };
-};
+import { LoginRequest, LoginResponse } from '../../../shared/models/auth.model';
 
 @Injectable({
   providedIn: 'root',

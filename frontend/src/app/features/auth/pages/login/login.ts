@@ -2,8 +2,9 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 
-import { AuthApiService, AuthRole } from '../../services/auth-api.service';
-import { AuthSessionService } from '../../services/auth-session.service';
+import { AuthSessionService } from '../../../../core/auth/auth-session.service';
+import { AuthRole } from '../../../../shared/models/auth.model';
+import { AuthApiService } from '../../services/auth-api.service';
 
 const ROLE_ROUTES: Record<AuthRole, string> = {
   CAMARERO: '/waiter',

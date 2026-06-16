@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 
-import { AuthSessionService } from '../../features/auth/services/auth-session.service';
+import { AuthSessionService } from '../../core/auth/auth-session.service';
 
 @Component({
   selector: 'app-main-layout',

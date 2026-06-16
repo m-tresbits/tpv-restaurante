@@ -1,0 +1,81 @@
+<section class="categories-panel">
+  <header class="categories-panel__header">
+    <div>
+      <h2>Categorías</h2>
+      <p>Gestión básica de las categorías utilizadas para organizar la carta.</p>
+    </div>
+  </header>
+
+  <form class="categories-panel__form" [formGroup]="createForm" (ngSubmit)="createCategory()">
+    <label for="category-name">Nueva categoría</label>
+
+    <div class="categories-panel__form-row">
+      <input id="category-name" type="text" formControlName="nombre" placeholder="Ej. Postres" />
+
+      <button type="submit" [disabled]="isSaving()">Crear</button>
+    </div>
+
+    @if (createForm.controls.nombre.invalid && createForm.controls.nombre.touched) {
+      <p class="categories-panel__validation">Introduce un nombre válido.</p>
+    }
+  </form>
+
+  @if (errorMessage()) {
+    <p class="categories-panel__error">{{ errorMessage() }}</p>
+  }
+
+  <div class="categories-panel__list">
+    @for (category of categories(); track category.id) {
+      <article class="categories-panel__item">
+        @if (editingCategoryId() === category.id) {
+          <form
+            class="categories-panel__edit-form"
+            [formGroup]="editForm"
+            (ngSubmit)="updateCategory(category.id)"
+          >
+            <input type="text" formControlName="nombre" />
+
+            <div class="categories-panel__actions">
+              <button type="submit" [disabled]="isSaving()">Guardar</button>
+              <button type="button" class="categories-panel__button--ghost" (click)="cancelEdit()">
+                Cancelar
+              </button>
+            </div>
+          </form>
+        } @else {
+          <div class="categories-panel__content">
+            <div>
+              <strong>{{ category.nombre }}</strong>
+              <small>{{ category.activo ? 'Activa' : 'Inactiva' }}</small>
+            </div>
+
+            <div class="categories-panel__actions">
+              <button type="button" (click)="startEdit(category)">Editar</button>
+
+              @if (category.activo) {
+                <button
+                  type="button"
+                  class="categories-panel__button--danger"
+                  (click)="deactivateCategory(category.id)"
+                  [disabled]="isSaving()"
+                >
+                  Desactivar
+                </button>
+              } @else {
+                <button
+                  type="button"
+                  (click)="activateCategory(category.id)"
+                  [disabled]="isSaving()"
+                >
+                  Activar
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </article>
+    } @empty {
+      <p class="categories-panel__empty">No hay categorías registradas.</p>
+    }
+  </div>
+</section>

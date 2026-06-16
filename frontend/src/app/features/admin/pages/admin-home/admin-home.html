@@ -39,6 +39,8 @@
       </article>
     </section>
 
+    <app-categories-panel [categories]="categories()" (categoriesChanged)="reload()" />
+
     <section class="admin-home__section">
       <h2>Carta</h2>
 

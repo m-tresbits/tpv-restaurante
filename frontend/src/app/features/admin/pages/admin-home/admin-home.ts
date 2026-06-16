@@ -9,9 +9,11 @@ import { Category } from '../../../../shared/models/category.model';
 import { Product } from '../../../../shared/models/product.model';
 import { DailyStock } from '../../../../shared/models/stock.model';
 import { RestaurantTable } from '../../../../shared/models/table.model';
+import { CategoriesPanel } from '../../components/categories-panel/categories-panel';
 
 @Component({
   selector: 'app-admin-home',
+  imports: [CategoriesPanel],
   templateUrl: './admin-home.html',
   styleUrl: './admin-home.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

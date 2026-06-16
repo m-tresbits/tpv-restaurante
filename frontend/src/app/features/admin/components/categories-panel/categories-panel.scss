@@ -1,0 +1,138 @@
+.categories-panel {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.categories-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.categories-panel__header h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1.4rem;
+}
+
+.categories-panel__header p {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-muted);
+}
+
+.categories-panel__form,
+.categories-panel__edit-form {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.categories-panel__form label {
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.categories-panel__form-row,
+.categories-panel__edit-form,
+.categories-panel__content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.categories-panel input {
+  width: 100%;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: white;
+  color: var(--color-text);
+}
+
+.categories-panel button {
+  padding: var(--space-3) var(--space-4);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.categories-panel button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.categories-panel__button--ghost {
+  border: 1px solid var(--color-border) !important;
+  background: transparent !important;
+  color: var(--color-text) !important;
+}
+
+.categories-panel__button--danger {
+  background: #b91c1c !important;
+}
+
+.categories-panel__validation,
+.categories-panel__error,
+.categories-panel__empty {
+  margin: 0;
+}
+
+.categories-panel__validation,
+.categories-panel__error {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.categories-panel__list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.categories-panel__item {
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+}
+
+.categories-panel__content > div:first-child {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.categories-panel__content strong {
+  color: var(--color-text);
+}
+
+.categories-panel__content small {
+  color: var(--color-text-muted);
+}
+
+.categories-panel__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.categories-panel__empty {
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 700px) {
+  .categories-panel__form-row,
+  .categories-panel__edit-form,
+  .categories-panel__content,
+  .categories-panel__actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

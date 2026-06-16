@@ -1,0 +1,76 @@
+<section class="stock-panel">
+  <header class="stock-panel__header">
+    <div>
+      <h2>Stock diario</h2>
+      <p>Configuración de la disponibilidad diaria de productos de la carta.</p>
+    </div>
+  </header>
+
+  <form class="stock-panel__form" [formGroup]="stockForm" (ngSubmit)="upsertStock()">
+    <div class="stock-panel__grid">
+      <label>
+        Producto
+        <select formControlName="productoId">
+          <option [ngValue]="null">Selecciona un producto</option>
+
+          @for (product of activeProducts(); track product.id) {
+            <option [ngValue]="product.id">
+              {{ product.nombre }}
+            </option>
+          }
+        </select>
+      </label>
+
+      <label>
+        Fecha
+        <input type="date" formControlName="fecha" />
+      </label>
+
+      <label>
+        Cantidad inicial
+        <input type="number" min="0" formControlName="cantidadInicial" />
+      </label>
+
+      <button type="submit" [disabled]="isSaving()">Guardar stock</button>
+    </div>
+
+    @if (stockForm.invalid && stockForm.touched) {
+      <p class="stock-panel__validation">
+        Selecciona un producto, una fecha y una cantidad válida.
+      </p>
+    }
+  </form>
+
+  @if (errorMessage()) {
+    <p class="stock-panel__error">{{ errorMessage() }}</p>
+  }
+
+  <div class="stock-panel__list">
+    @for (stockItem of stock(); track stockItem.id) {
+      <article class="stock-panel__item">
+        <div>
+          <strong>{{ stockItem.product.nombre }}</strong>
+          <span>{{ stockItem.fecha }}</span>
+        </div>
+
+        <div class="stock-panel__quantities">
+          <span>Inicial: {{ stockItem.cantidadInicial }}</span>
+          <span>Disponible: {{ stockItem.cantidadDisponible }}</span>
+        </div>
+
+        <small
+          class="stock-panel__badge"
+          [class.stock-panel__badge--empty]="stockItem.cantidadDisponible <= 0"
+          [class.stock-panel__badge--partial]="
+            stockItem.cantidadDisponible > 0 &&
+            stockItem.cantidadDisponible < stockItem.cantidadInicial
+          "
+        >
+          {{ stockStatus(stockItem) }}
+        </small>
+      </article>
+    } @empty {
+      <p class="stock-panel__empty">No hay stock diario configurado.</p>
+    }
+  </div>
+</section>

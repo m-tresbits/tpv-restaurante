@@ -11,13 +11,14 @@ import { DailyStock } from '../../../../shared/models/stock.model';
 import { RestaurantTable } from '../../../../shared/models/table.model';
 import { CategoriesPanel } from '../../components/categories-panel/categories-panel';
 import { ProductsPanel } from '../../components/products-panel/products-panel';
+import { StockPanel } from '../../components/stock-panel/stock-panel';
 import { TablesPanel } from '../../components/tables-panel/tables-panel';
 
 type AdminSection = 'dashboard' | 'categories' | 'products' | 'tables' | 'stock';
 
 @Component({
   selector: 'app-admin-home',
-  imports: [CategoriesPanel, ProductsPanel, TablesPanel],
+  imports: [CategoriesPanel, ProductsPanel, TablesPanel, StockPanel],
   templateUrl: './admin-home.html',
   styleUrl: './admin-home.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

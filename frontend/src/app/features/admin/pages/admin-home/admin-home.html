@@ -111,10 +111,11 @@
       }
 
       @if (activeSection() === 'stock') {
-        <section class="admin-home__placeholder">
-          <h2>Stock diario</h2>
-          <p>Esta sección se utilizará para configurar la disponibilidad diaria de productos.</p>
-        </section>
+        <app-stock-panel
+          [stock]="stock()"
+          [products]="products()"
+          (stockChanged)="reload()"
+        ></app-stock-panel>
       }
     }
   </main>

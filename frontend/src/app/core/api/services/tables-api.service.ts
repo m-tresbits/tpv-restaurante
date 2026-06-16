@@ -24,8 +24,8 @@ export class TablesApiService {
     });
   }
 
-  findAvailable(): Observable<RestaurantTable[]> {
-    return this.http.get<RestaurantTable[]>(`${API_BASE_URL}/tables/available`, {
+  findActive(): Observable<RestaurantTable[]> {
+    return this.http.get<RestaurantTable[]>(`${API_BASE_URL}/tables/active`, {
       params: {
         t: Date.now().toString(),
       },

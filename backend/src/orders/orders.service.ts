@@ -4,10 +4,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 
 import { Product } from '../products/product.entity';
-import { StockService } from '../stock/stock.service';
+import { DailyStock } from '../stock/stock.entity';
 import { RestaurantTable } from '../tables/table.entity';
 import { User } from '../users/user.entity';
 import { AddOrderItemDto } from './dto/add-order-item.dto';
@@ -29,7 +29,7 @@ export class OrdersService {
     private readonly productsRepository: Repository<Product>,
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
-    private readonly stockService: StockService,
+    private readonly dataSource: DataSource,
   ) {}
 
   findOpen() {
@@ -129,19 +129,62 @@ export class OrdersService {
     const quantity = this.normalizeQuantity(addOrderItemDto.cantidad);
     const stockDate = this.getStockDateFromOrder(order);
 
-    await this.stockService.decreaseDailyStock(product.id, quantity, stockDate);
+    await this.dataSource.transaction(async (manager) => {
+      const stockRepository = manager.getRepository(DailyStock);
+      const orderDetailsRepository = manager.getRepository(OrderDetail);
+      const ordersRepository = manager.getRepository(Order);
 
-    const detail = this.orderDetailsRepository.create({
-      order,
-      product,
-      cantidad: quantity,
-      precioUnitario: product.precio,
-      estado: 'PENDIENTE',
-      observaciones: this.normalizeObservations(addOrderItemDto.observaciones),
+      const stock = await stockRepository.findOne({
+        where: {
+          product: {
+            id: product.id,
+          },
+          fecha: stockDate,
+        },
+        lock: {
+          mode: 'pessimistic_write',
+        },
+      });
+
+      if (!stock) {
+        throw new BadRequestException(
+          'No hay stock diario configurado para este producto',
+        );
+      }
+
+      if (stock.cantidadDisponible < quantity) {
+        throw new BadRequestException(
+          'No hay stock suficiente para este producto',
+        );
+      }
+
+      stock.cantidadDisponible -= quantity;
+      await stockRepository.save(stock);
+
+      const detail = orderDetailsRepository.create({
+        order,
+        product,
+        cantidad: quantity,
+        precioUnitario: product.precio,
+        estado: 'PENDIENTE',
+        observaciones: this.normalizeObservations(
+          addOrderItemDto.observaciones,
+        ),
+      });
+
+      await orderDetailsRepository.save(detail);
+
+      const details = await orderDetailsRepository.find({
+        where: {
+          order: {
+            id: order.id,
+          },
+        },
+      });
+
+      order.total = this.calculateTotal(details);
+      await ordersRepository.save(order);
     });
-
-    await this.orderDetailsRepository.save(detail);
-    await this.updateTotal(order.id);
 
     return this.findOne(order.id);
   }
@@ -242,29 +285,62 @@ export class OrdersService {
       throw new BadRequestException('El pedido ya está cerrado o cancelado');
     }
 
-    order.estado = 'CANCELADO';
-    order.fechaCierre = new Date();
-
-    await this.ordersRepository.save(order);
-
-    const details = await this.findDetailsByOrderId(order.id);
     const stockDate = this.getStockDateFromOrder(order);
 
-    for (const detail of details) {
-      if (detail.estado !== 'CANCELADO') {
-        await this.stockService.increaseDailyStock(
-          detail.product.id,
-          detail.cantidad,
-          stockDate,
-        );
+    await this.dataSource.transaction(async (manager) => {
+      const stockRepository = manager.getRepository(DailyStock);
+      const orderDetailsRepository = manager.getRepository(OrderDetail);
+      const ordersRepository = manager.getRepository(Order);
+      const tablesRepository = manager.getRepository(RestaurantTable);
+
+      order.estado = 'CANCELADO';
+      order.fechaCierre = new Date();
+
+      await ordersRepository.save(order);
+
+      const details = await orderDetailsRepository.find({
+        where: {
+          order: {
+            id: order.id,
+          },
+        },
+        relations: {
+          product: true,
+        },
+      });
+
+      for (const detail of details) {
+        if (detail.estado !== 'CANCELADO') {
+          const stock = await stockRepository.findOne({
+            where: {
+              product: {
+                id: detail.product.id,
+              },
+              fecha: stockDate,
+            },
+            lock: {
+              mode: 'pessimistic_write',
+            },
+          });
+
+          if (stock) {
+            stock.cantidadDisponible += detail.cantidad;
+
+            if (stock.cantidadDisponible > stock.cantidadInicial) {
+              stock.cantidadDisponible = stock.cantidadInicial;
+            }
+
+            await stockRepository.save(stock);
+          }
+        }
+
+        detail.estado = 'CANCELADO';
+        await orderDetailsRepository.save(detail);
       }
 
-      detail.estado = 'CANCELADO';
-      await this.orderDetailsRepository.save(detail);
-    }
-
-    order.table.estado = 'LIBRE';
-    await this.tablesRepository.save(order.table);
+      order.table.estado = 'LIBRE';
+      await tablesRepository.save(order.table);
+    });
 
     return this.findOne(order.id);
   }
@@ -273,11 +349,7 @@ export class OrdersService {
     const order = await this.findOne(orderId);
     const details = await this.findDetailsByOrderId(order.id);
 
-    const total = details.reduce<number>((accumulator, detail) => {
-      return accumulator + Number(detail.precioUnitario) * detail.cantidad;
-    }, 0);
-
-    order.total = total.toFixed(2);
+    order.total = this.calculateTotal(details);
 
     await this.ordersRepository.save(order);
   }
@@ -342,6 +414,14 @@ export class OrdersService {
 
   private getStockDateFromOrder(order: Order): string {
     return order.fechaCreacion.toISOString().slice(0, 10);
+  }
+
+  private calculateTotal(details: OrderDetail[]): string {
+    const total = details.reduce<number>((accumulator, detail) => {
+      return accumulator + Number(detail.precioUnitario) * detail.cantidad;
+    }, 0);
+
+    return total.toFixed(2);
   }
 
   private normalizeQuantity(quantity: number) {

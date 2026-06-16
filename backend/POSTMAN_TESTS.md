@@ -4,6 +4,17 @@ Pruebas rápidas para comprobar los endpoints del backend en Postman.
 
 Usar `Authorization > Bearer Token` en todas las rutas protegidas.
 
+Variables recomendadas en Postman:
+
+```text
+baseUrl = http://localhost:3000
+fecha = 2026-06-16
+productId = 1
+tableId = 1
+orderId = id devuelto por POST /orders
+detailId = id devuelto dentro de details al añadir un producto
+```
+
 ---
 
 ## Auth
@@ -11,7 +22,7 @@ Usar `Authorization > Bearer Token` en todas las rutas protegidas.
 Login como administrador.
 
 ```http
-POST http://localhost:3000/auth/login
+POST {{baseUrl}}/auth/login
 ```
 
 ```json
@@ -24,7 +35,7 @@ POST http://localhost:3000/auth/login
 Login como camarero.
 
 ```http
-POST http://localhost:3000/auth/login
+POST {{baseUrl}}/auth/login
 ```
 
 ```json
@@ -37,7 +48,7 @@ POST http://localhost:3000/auth/login
 Login como cocina.
 
 ```http
-POST http://localhost:3000/auth/login
+POST {{baseUrl}}/auth/login
 ```
 
 ```json
@@ -54,19 +65,19 @@ POST http://localhost:3000/auth/login
 ADMIN obtiene todas las categorías.
 
 ```http
-GET http://localhost:3000/categories
+GET {{baseUrl}}/categories
 ```
 
 ADMIN o CAMARERO obtiene solo categorías activas.
 
 ```http
-GET http://localhost:3000/categories/active
+GET {{baseUrl}}/categories/active
 ```
 
 ADMIN crea una categoría.
 
 ```http
-POST http://localhost:3000/categories
+POST {{baseUrl}}/categories
 ```
 
 ```json
@@ -78,7 +89,7 @@ POST http://localhost:3000/categories
 ADMIN edita una categoría.
 
 ```http
-PATCH http://localhost:3000/categories/6
+PATCH {{baseUrl}}/categories/6
 ```
 
 ```json
@@ -90,19 +101,19 @@ PATCH http://localhost:3000/categories/6
 ADMIN desactiva una categoría.
 
 ```http
-PATCH http://localhost:3000/categories/6/deactivate
+PATCH {{baseUrl}}/categories/6/deactivate
 ```
 
 ADMIN activa una categoría.
 
 ```http
-PATCH http://localhost:3000/categories/6/activate
+PATCH {{baseUrl}}/categories/6/activate
 ```
 
 CAMARERO intenta crear una categoría. Resultado esperado: `403 Forbidden`.
 
 ```http
-POST http://localhost:3000/categories
+POST {{baseUrl}}/categories
 ```
 
 ```json
@@ -118,31 +129,31 @@ POST http://localhost:3000/categories
 ADMIN obtiene todos los productos.
 
 ```http
-GET http://localhost:3000/products
+GET {{baseUrl}}/products
 ```
 
 ADMIN o CAMARERO obtiene solo productos disponibles.
 
 ```http
-GET http://localhost:3000/products/available
+GET {{baseUrl}}/products/available
 ```
 
 ADMIN o CAMARERO obtiene un producto por id.
 
 ```http
-GET http://localhost:3000/products/1
+GET {{baseUrl}}/products/{{productId}}
 ```
 
 ADMIN crea un producto.
 
 ```http
-POST http://localhost:3000/products
+POST {{baseUrl}}/products
 ```
 
 ```json
 {
-  "nombre": "Burger",
-  "descripcion": "Hamburguesa clásica",
+  "nombre": "Burger prueba",
+  "descripcion": "Producto de prueba",
   "precio": 9.5,
   "categoriaId": 1
 }
@@ -151,7 +162,7 @@ POST http://localhost:3000/products
 ADMIN edita un producto.
 
 ```http
-PATCH http://localhost:3000/products/1
+PATCH {{baseUrl}}/products/{{productId}}
 ```
 
 ```json
@@ -164,25 +175,25 @@ PATCH http://localhost:3000/products/1
 ADMIN desactiva un producto.
 
 ```http
-PATCH http://localhost:3000/products/1/deactivate
+PATCH {{baseUrl}}/products/{{productId}}/deactivate
 ```
 
 ADMIN activa un producto.
 
 ```http
-PATCH http://localhost:3000/products/1/activate
+PATCH {{baseUrl}}/products/{{productId}}/activate
 ```
 
 CAMARERO intenta obtener todos los productos. Resultado esperado: `403 Forbidden`.
 
 ```http
-GET http://localhost:3000/products
+GET {{baseUrl}}/products
 ```
 
 CAMARERO intenta crear un producto. Resultado esperado: `403 Forbidden`.
 
 ```http
-POST http://localhost:3000/products
+POST {{baseUrl}}/products
 ```
 
 ```json
@@ -197,7 +208,7 @@ POST http://localhost:3000/products
 CAMARERO intenta editar un producto. Resultado esperado: `403 Forbidden`.
 
 ```http
-PATCH http://localhost:3000/products/1
+PATCH {{baseUrl}}/products/{{productId}}
 ```
 
 ```json
@@ -213,30 +224,30 @@ PATCH http://localhost:3000/products/1
 ADMIN obtiene todas las mesas.
 
 ```http
-GET http://localhost:3000/tables
+GET {{baseUrl}}/tables
 ```
 
 ADMIN o CAMARERO obtiene solo las mesas activas.
 
 ```http
-GET http://localhost:3000/tables/active
+GET {{baseUrl}}/tables/active
 ```
 
 ADMIN o CAMARERO obtiene una mesa por id.
 
 ```http
-GET http://localhost:3000/tables/1
+GET {{baseUrl}}/tables/{{tableId}}
 ```
 
 ADMIN crea una mesa.
 
 ```http
-POST http://localhost:3000/tables
+POST {{baseUrl}}/tables
 ```
 
 ```json
 {
-  "numero": 1,
+  "numero": 99,
   "capacidad": 4
 }
 ```
@@ -244,7 +255,7 @@ POST http://localhost:3000/tables
 ADMIN edita una mesa.
 
 ```http
-PATCH http://localhost:3000/tables/1
+PATCH {{baseUrl}}/tables/{{tableId}}
 ```
 
 ```json
@@ -256,7 +267,7 @@ PATCH http://localhost:3000/tables/1
 ADMIN o CAMARERO cambia el estado de una mesa.
 
 ```http
-PATCH http://localhost:3000/tables/1/status
+PATCH {{baseUrl}}/tables/{{tableId}}/status
 ```
 
 ```json
@@ -268,7 +279,7 @@ PATCH http://localhost:3000/tables/1/status
 ADMIN o CAMARERO libera una mesa.
 
 ```http
-PATCH http://localhost:3000/tables/1/status
+PATCH {{baseUrl}}/tables/{{tableId}}/status
 ```
 
 ```json
@@ -280,174 +291,13 @@ PATCH http://localhost:3000/tables/1/status
 CAMARERO intenta crear una mesa. Resultado esperado: `403 Forbidden`.
 
 ```http
-POST http://localhost:3000/tables
+POST {{baseUrl}}/tables
 ```
 
 ```json
 {
-  "numero": 99,
+  "numero": 100,
   "capacidad": 2
-}
-```
-
----
-
-## Orders
-
-CAMARERO abre un pedido en una mesa.
-
-```http
-POST http://localhost:3000/orders
-```
-
-```json
-{
-  "mesaId": 1
-}
-```
-
-CAMARERO añade un producto al pedido.
-
-```http
-POST http://localhost:3000/orders/1/items
-```
-
-```json
-{
-  "productoId": 1,
-  "cantidad": 2,
-  "observaciones": "Sin cebolla"
-}
-```
-
-CAMARERO intenta añadir un producto sin stock diario configurado. Resultado esperado: `400 Bad Request`.
-
-```http
-POST http://localhost:3000/orders/1/items
-```
-
-```json
-{
-  "productoId": 1,
-  "cantidad": 2,
-  "observaciones": "Sin stock configurado"
-}
-```
-
-CAMARERO intenta añadir más cantidad que el stock disponible. Resultado esperado: `400 Bad Request`.
-
-```http
-POST http://localhost:3000/orders/1/items
-```
-
-```json
-{
-  "productoId": 1,
-  "cantidad": 999,
-  "observaciones": "Más cantidad que stock disponible"
-}
-```
-
-CAMARERO envía el pedido a cocina.
-
-```http
-POST http://localhost:3000/orders/1/send-to-kitchen
-```
-
-ADMIN, CAMARERO o COCINA obtiene los pedidos abiertos o enviados a cocina.
-
-```http
-GET http://localhost:3000/orders/open
-```
-
-ADMIN, CAMARERO o COCINA obtiene un pedido por id.
-
-```http
-GET http://localhost:3000/orders/1
-```
-
-COCINA marca una línea del pedido como en preparación.
-
-```http
-PATCH http://localhost:3000/orders/1/items/1/status
-```
-
-```json
-{
-  "estado": "EN_PREPARACION"
-}
-```
-
-COCINA marca una línea del pedido como lista.
-
-```http
-PATCH http://localhost:3000/orders/1/items/1/status
-```
-
-```json
-{
-  "estado": "LISTO"
-}
-```
-
-CAMARERO marca una línea del pedido como servida.
-
-```http
-PATCH http://localhost:3000/orders/1/items/1/status
-```
-
-```json
-{
-  "estado": "SERVIDO"
-}
-```
-
-COCINA intenta marcar una línea con un estado no permitido. Resultado esperado: `400 Bad Request`.
-
-```http
-PATCH http://localhost:3000/orders/1/items/1/status
-```
-
-```json
-{
-  "estado": "MAL"
-}
-```
-
-CAMARERO cierra un pedido.
-
-```http
-PATCH http://localhost:3000/orders/1/close
-```
-
-ADMIN o CAMARERO cancela un pedido.
-
-```http
-PATCH http://localhost:3000/orders/1/cancel
-```
-
-ADMIN intenta abrir un pedido. Resultado esperado: `403 Forbidden`.
-
-```http
-POST http://localhost:3000/orders
-```
-
-```json
-{
-  "mesaId": 1
-}
-```
-
-COCINA intenta añadir productos a un pedido. Resultado esperado: `403 Forbidden`.
-
-```http
-POST http://localhost:3000/orders/1/items
-```
-
-```json
-{
-  "productoId": 1,
-  "cantidad": 1
 }
 ```
 
@@ -458,25 +308,25 @@ POST http://localhost:3000/orders/1/items
 ADMIN obtiene todo el stock diario.
 
 ```http
-GET http://localhost:3000/stock
+GET {{baseUrl}}/stock
 ```
 
 ADMIN, CAMARERO o COCINA obtiene el stock de una fecha.
 
 ```http
-GET http://localhost:3000/stock/date/2026-06-16
+GET {{baseUrl}}/stock/date/{{fecha}}
 ```
 
 ADMIN, CAMARERO o COCINA obtiene el stock de un producto en una fecha.
 
 ```http
-GET http://localhost:3000/stock/product/1/date/2026-06-16
+GET {{baseUrl}}/stock/product/{{productId}}/date/{{fecha}}
 ```
 
 ADMIN crea o actualiza el stock diario de un producto antes de usarlo en pedidos.
 
 ```http
-POST http://localhost:3000/stock/daily
+POST {{baseUrl}}/stock/daily
 ```
 
 ```json
@@ -490,7 +340,7 @@ POST http://localhost:3000/stock/daily
 ADMIN intenta crear stock con una fecha incorrecta. Resultado esperado: `400 Bad Request`.
 
 ```http
-POST http://localhost:3000/stock/daily
+POST {{baseUrl}}/stock/daily
 ```
 
 ```json
@@ -504,7 +354,7 @@ POST http://localhost:3000/stock/daily
 ADMIN intenta crear stock con cantidad negativa. Resultado esperado: `400 Bad Request`.
 
 ```http
-POST http://localhost:3000/stock/daily
+POST {{baseUrl}}/stock/daily
 ```
 
 ```json
@@ -518,7 +368,7 @@ POST http://localhost:3000/stock/daily
 CAMARERO intenta crear o actualizar stock diario. Resultado esperado: `403 Forbidden`.
 
 ```http
-POST http://localhost:3000/stock/daily
+POST {{baseUrl}}/stock/daily
 ```
 
 ```json
@@ -531,11 +381,210 @@ POST http://localhost:3000/stock/daily
 
 ---
 
+## Orders
+
+Antes de añadir productos a un pedido, debe existir stock diario para el producto y la fecha del pedido.
+
+CAMARERO abre un pedido en una mesa libre.
+
+```http
+POST {{baseUrl}}/orders
+```
+
+```json
+{
+  "mesaId": 1
+}
+```
+
+Guardar el campo `id` de la respuesta como `orderId`.
+
+CAMARERO añade un producto al pedido usando el `orderId` real.
+
+```http
+POST {{baseUrl}}/orders/{{orderId}}/items
+```
+
+```json
+{
+  "productoId": 1,
+  "cantidad": 2,
+  "observaciones": "Sin cebolla"
+}
+```
+
+Guardar el campo `details[0].id` de la respuesta como `detailId`.
+
+ADMIN, CAMARERO o COCINA comprueba que el stock se ha descontado.
+
+```http
+GET {{baseUrl}}/stock/product/{{productId}}/date/{{fecha}}
+```
+
+CAMARERO envía el pedido a cocina.
+
+```http
+POST {{baseUrl}}/orders/{{orderId}}/send-to-kitchen
+```
+
+ADMIN, CAMARERO o COCINA obtiene los pedidos abiertos o enviados a cocina.
+
+```http
+GET {{baseUrl}}/orders/open
+```
+
+ADMIN, CAMARERO o COCINA obtiene un pedido por id.
+
+```http
+GET {{baseUrl}}/orders/{{orderId}}
+```
+
+COCINA marca una línea del pedido como en preparación.
+
+```http
+PATCH {{baseUrl}}/orders/{{orderId}}/items/{{detailId}}/status
+```
+
+```json
+{
+  "estado": "EN_PREPARACION"
+}
+```
+
+COCINA marca una línea del pedido como lista.
+
+```http
+PATCH {{baseUrl}}/orders/{{orderId}}/items/{{detailId}}/status
+```
+
+```json
+{
+  "estado": "LISTO"
+}
+```
+
+CAMARERO marca una línea del pedido como servida.
+
+```http
+PATCH {{baseUrl}}/orders/{{orderId}}/items/{{detailId}}/status
+```
+
+```json
+{
+  "estado": "SERVIDO"
+}
+```
+
+COCINA intenta marcar una línea con un estado no permitido. Resultado esperado: `400 Bad Request`.
+
+```http
+PATCH {{baseUrl}}/orders/{{orderId}}/items/{{detailId}}/status
+```
+
+```json
+{
+  "estado": "MAL"
+}
+```
+
+CAMARERO cierra un pedido.
+
+```http
+PATCH {{baseUrl}}/orders/{{orderId}}/close
+```
+
+El stock no se restaura al cerrar el pedido.
+
+ADMIN o CAMARERO cancela un pedido.
+
+```http
+PATCH {{baseUrl}}/orders/{{orderId}}/cancel
+```
+
+El stock se restaura al cancelar el pedido. Para probar cancelación, usar un pedido distinto al que se haya cerrado.
+
+CAMARERO intenta añadir un producto sin stock diario configurado. Resultado esperado: `400 Bad Request`.
+
+```http
+POST {{baseUrl}}/orders/{{orderId}}/items
+```
+
+```json
+{
+  "productoId": 2,
+  "cantidad": 2,
+  "observaciones": "Sin stock configurado"
+}
+```
+
+CAMARERO intenta añadir más cantidad que el stock disponible. Resultado esperado: `400 Bad Request`.
+
+```http
+POST {{baseUrl}}/orders/{{orderId}}/items
+```
+
+```json
+{
+  "productoId": 1,
+  "cantidad": 999,
+  "observaciones": "Más cantidad que stock disponible"
+}
+```
+
+ADMIN intenta abrir un pedido. Resultado esperado: `403 Forbidden`.
+
+```http
+POST {{baseUrl}}/orders
+```
+
+```json
+{
+  "mesaId": 1
+}
+```
+
+COCINA intenta añadir productos a un pedido. Resultado esperado: `403 Forbidden`.
+
+```http
+POST {{baseUrl}}/orders/{{orderId}}/items
+```
+
+```json
+{
+  "productoId": 1,
+  "cantidad": 1
+}
+```
+
+---
+
+## Flujo recomendado
+
+1. Login como ADMIN.
+2. Consultar productos y mesas.
+3. Crear stock diario para `productId` y `fecha`.
+4. Login como CAMARERO.
+5. Crear pedido y guardar `orderId`.
+6. Añadir producto al pedido y guardar `detailId`.
+7. Comprobar que el stock baja.
+8. Enviar pedido a cocina.
+9. Login como COCINA.
+10. Marcar la línea como `EN_PREPARACION`.
+11. Marcar la línea como `LISTO`.
+12. Login como CAMARERO.
+13. Marcar la línea como `SERVIDO`.
+14. Cerrar el pedido.
+15. Comprobar que la mesa vuelve a `LIBRE`.
+
+Para probar cancelación, crear otro pedido distinto, añadir producto y cancelar. El stock debe restaurarse.
+
+---
+
 ## Notes
 
-Cambiar los ids `1` y `6` por ids reales de la base de datos.
+No asumir que los ids son `1`. Usar siempre los ids reales devueltos por la API.
 
-Cambiar las fechas de ejemplo por la fecha que se quiera probar.
+Cambiar `{{productId}}`, `{{tableId}}`, `{{orderId}}`, `{{detailId}}` y `{{fecha}}` por valores reales o variables de Postman.
 
 `401 Unauthorized` significa que falta token o el token no es válido.
 

@@ -49,16 +49,62 @@
             </div>
           </dl>
 
-          @if (canOpenOrder(table)) {
-            <button type="button" class="waiter-home__primary-action">Gestionar pedido</button>
+          <div class="waiter-home__actions">
+            @if (table.estado === 'LIBRE') {
+              <button
+                type="button"
+                class="waiter-home__secondary-action"
+                [disabled]="isSaving()"
+                (click)="occupyTable(table)"
+              >
+                Ocupar mesa
+              </button>
 
-            <p class="waiter-home__hint">
-              En el siguiente bloque se conectará esta acción con la creación o recuperación del
-              pedido activo.
-            </p>
-          } @else {
-            <p class="waiter-home__warning">Esta mesa no está disponible para gestionar pedidos.</p>
-          }
+              <button
+                type="button"
+                class="waiter-home__secondary-action"
+                [disabled]="isSaving()"
+                (click)="reserveTable(table)"
+              >
+                Reservar mesa
+              </button>
+            }
+
+            @if (table.estado === 'OCUPADA') {
+              <button
+                type="button"
+                class="waiter-home__secondary-action"
+                [disabled]="isSaving()"
+                (click)="releaseTable(table)"
+              >
+                Liberar mesa
+              </button>
+            }
+
+            @if (table.estado === 'RESERVADA') {
+              <button
+                type="button"
+                class="waiter-home__secondary-action"
+                [disabled]="isSaving()"
+                (click)="cancelReservation(table)"
+              >
+                Cancelar reserva
+              </button>
+            }
+
+            @if (canOpenOrder(table)) {
+              <button type="button" class="waiter-home__primary-action">Gestionar pedido</button>
+
+              <p class="waiter-home__hint">
+                En el siguiente bloque se conectará esta acción con la creación o recuperación del
+                pedido activo.
+              </p>
+            } @else {
+              <p class="waiter-home__warning">
+                Esta mesa no está disponible para gestionar pedidos.
+              </p>
+            }
+          </div>
         } @else {
           <h2>Sin mesa seleccionada</h2>
           <p>Selecciona una mesa del listado para consultar su estado y continuar con el pedido.</p>

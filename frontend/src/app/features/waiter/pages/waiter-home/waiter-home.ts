@@ -15,6 +15,7 @@ export class WaiterHome implements OnInit {
   protected readonly tables = signal<RestaurantTable[]>([]);
   protected readonly selectedTable = signal<RestaurantTable | null>(null);
   protected readonly isLoading = signal(false);
+  protected readonly isSaving = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
 
   ngOnInit(): void {
@@ -48,6 +49,22 @@ export class WaiterHome implements OnInit {
     return table.estado === 'LIBRE' || table.estado === 'OCUPADA';
   }
 
+  protected occupyTable(table: RestaurantTable): void {
+    this.updateTableStatus(table.id, 'OCUPADA');
+  }
+
+  protected reserveTable(table: RestaurantTable): void {
+    this.updateTableStatus(table.id, 'RESERVADA');
+  }
+
+  protected releaseTable(table: RestaurantTable): void {
+    this.updateTableStatus(table.id, 'LIBRE');
+  }
+
+  protected cancelReservation(table: RestaurantTable): void {
+    this.updateTableStatus(table.id, 'LIBRE');
+  }
+
   private loadTables(): void {
     this.isLoading.set(true);
     this.errorMessage.set(null);
@@ -63,6 +80,33 @@ export class WaiterHome implements OnInit {
         this.isLoading.set(false);
       },
     });
+  }
+
+  private updateTableStatus(tableId: number, estado: TableStatus): void {
+    if (this.isSaving()) {
+      return;
+    }
+
+    this.isSaving.set(true);
+    this.errorMessage.set(null);
+
+    this.tablesApiService.updateStatus(tableId, { estado }).subscribe({
+      next: (updatedTable) => {
+        this.replaceTable(updatedTable);
+        this.selectedTable.set(updatedTable);
+        this.isSaving.set(false);
+      },
+      error: () => {
+        this.errorMessage.set('No se ha podido actualizar el estado de la mesa.');
+        this.isSaving.set(false);
+      },
+    });
+  }
+
+  private replaceTable(updatedTable: RestaurantTable): void {
+    this.tables.update((tables) =>
+      tables.map((table) => (table.id === updatedTable.id ? updatedTable : table)),
+    );
   }
 
   private syncSelectedTable(tables: RestaurantTable[]): void {

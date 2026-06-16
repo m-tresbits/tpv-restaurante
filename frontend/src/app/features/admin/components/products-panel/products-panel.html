@@ -1,0 +1,140 @@
+<section class="products-panel">
+  <header class="products-panel__header">
+    <div>
+      <h2>Productos</h2>
+      <p>Gestión básica de los platos y productos disponibles en la carta.</p>
+    </div>
+  </header>
+
+  <form class="products-panel__form" [formGroup]="createForm" (ngSubmit)="createProduct()">
+    <div class="products-panel__grid">
+      <label>
+        Nombre
+        <input type="text" formControlName="nombre" placeholder="Ej. Pizza BBQ" />
+      </label>
+
+      <label>
+        Precio
+        <input type="number" min="0.01" step="0.01" formControlName="precio" />
+      </label>
+
+      <label>
+        Categoría
+        <select formControlName="categoriaId">
+          <option [ngValue]="null">Selecciona una categoría</option>
+
+          @for (category of categories(); track category.id) {
+            <option [ngValue]="category.id">
+              {{ category.nombre }}
+            </option>
+          }
+        </select>
+      </label>
+    </div>
+
+    <label>
+      Descripción
+      <input type="text" formControlName="descripcion" placeholder="Descripción opcional" />
+    </label>
+
+    <button type="submit" [disabled]="isSaving()">Crear producto</button>
+
+    @if (createForm.invalid && createForm.touched) {
+      <p class="products-panel__validation">
+        Revisa el nombre, el precio y la categoría del producto.
+      </p>
+    }
+  </form>
+
+  @if (errorMessage()) {
+    <p class="products-panel__error">{{ errorMessage() }}</p>
+  }
+
+  <div class="products-panel__list">
+    @for (product of products(); track product.id) {
+      <article class="products-panel__item">
+        @if (editingProductId() === product.id) {
+          <form
+            class="products-panel__edit-form"
+            [formGroup]="editForm"
+            (ngSubmit)="updateProduct(product.id)"
+          >
+            <div class="products-panel__grid">
+              <label>
+                Nombre
+                <input type="text" formControlName="nombre" />
+              </label>
+
+              <label>
+                Precio
+                <input type="number" min="0.01" step="0.01" formControlName="precio" />
+              </label>
+
+              <label>
+                Categoría
+                <select formControlName="categoriaId">
+                  <option [ngValue]="null">Selecciona una categoría</option>
+
+                  @for (category of categories(); track category.id) {
+                    <option [ngValue]="category.id">
+                      {{ category.nombre }}
+                    </option>
+                  }
+                </select>
+              </label>
+            </div>
+
+            <label>
+              Descripción
+              <input type="text" formControlName="descripcion" />
+            </label>
+
+            <div class="products-panel__actions">
+              <button type="submit" [disabled]="isSaving()">Guardar</button>
+              <button type="button" class="products-panel__button--ghost" (click)="cancelEdit()">
+                Cancelar
+              </button>
+            </div>
+          </form>
+        } @else {
+          <div class="products-panel__content">
+            <div>
+              <strong>{{ product.nombre }}</strong>
+              <span>{{ product.category.nombre }}</span>
+
+              @if (product.descripcion) {
+                <small>{{ product.descripcion }}</small>
+              }
+            </div>
+
+            <div class="products-panel__meta">
+              <span>{{ product.precio }} €</span>
+              <small>{{ product.activo ? 'Disponible' : 'Inactivo' }}</small>
+            </div>
+
+            <div class="products-panel__actions">
+              <button type="button" (click)="startEdit(product)">Editar</button>
+
+              @if (product.activo) {
+                <button
+                  type="button"
+                  class="products-panel__button--danger"
+                  (click)="deactivateProduct(product.id)"
+                  [disabled]="isSaving()"
+                >
+                  Desactivar
+                </button>
+              } @else {
+                <button type="button" (click)="activateProduct(product.id)" [disabled]="isSaving()">
+                  Activar
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </article>
+    } @empty {
+      <p class="products-panel__empty">No hay productos registrados.</p>
+    }
+  </div>
+</section>

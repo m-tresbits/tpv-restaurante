@@ -292,6 +292,91 @@ POST http://localhost:3000/tables
 
 ---
 
+## Orders
+
+CAMARERO abre un pedido en una mesa.
+
+```http
+POST http://localhost:3000/orders
+```
+
+```json
+{
+  "mesaId": 1
+}
+```
+
+CAMARERO añade un producto al pedido.
+
+```http
+POST http://localhost:3000/orders/1/items
+```
+
+```json
+{
+  "productoId": 1,
+  "cantidad": 2,
+  "observaciones": "Sin cebolla"
+}
+```
+
+CAMARERO envía el pedido a cocina.
+
+```http
+POST http://localhost:3000/orders/1/send-to-kitchen
+```
+
+ADMIN, CAMARERO o COCINA obtiene los pedidos abiertos o enviados a cocina.
+
+```http
+GET http://localhost:3000/orders/open
+```
+
+ADMIN, CAMARERO o COCINA obtiene un pedido por id.
+
+```http
+GET http://localhost:3000/orders/1
+```
+
+CAMARERO cierra un pedido.
+
+```http
+PATCH http://localhost:3000/orders/1/close
+```
+
+ADMIN o CAMARERO cancela un pedido.
+
+```http
+PATCH http://localhost:3000/orders/1/cancel
+```
+
+ADMIN intenta abrir un pedido. Resultado esperado: `403 Forbidden`.
+
+```http
+POST http://localhost:3000/orders
+```
+
+```json
+{
+  "mesaId": 1
+}
+```
+
+COCINA intenta añadir productos a un pedido. Resultado esperado: `403 Forbidden`.
+
+```http
+POST http://localhost:3000/orders/1/items
+```
+
+```json
+{
+  "productoId": 1,
+  "cantidad": 1
+}
+```
+
+---
+
 ## Notes
 
 Cambiar los ids `1` y `6` por ids reales de la base de datos.

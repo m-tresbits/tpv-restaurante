@@ -11,6 +11,7 @@ import { AuthModule } from './auth/auth.module';
 import { CategoriesModule } from './categories/categories.module';
 import { ProductsModule } from './products/products.module';
 import { TablesModule } from './tables/tables.module';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { TablesModule } from './tables/tables.module';
     CategoriesModule,
     ProductsModule,
     TablesModule,
+    OrdersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -2,8 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { API_BASE_URL } from '../api.config';
 import { DailyStock, UpsertDailyStockRequest } from '../../../shared/models/stock.model';
+import { API_BASE_URL } from '../api.config';
 
 @Injectable({
   providedIn: 'root',

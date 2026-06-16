@@ -2,12 +2,12 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { API_BASE_URL } from '../../../core/api/api.config';
 import {
   Category,
   CreateCategoryRequest,
   UpdateCategoryRequest,
 } from '../../../shared/models/category.model';
+import { API_BASE_URL } from '../api.config';
 
 @Injectable({
   providedIn: 'root',

@@ -6,7 +6,8 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "test:ci": "ng test --watch=false"
   },
   "private": true,
   "packageManager": "npm@10.8.2",
@@ -34,6 +35,8 @@
     "vitest": "^4.0.8"
   },
   "overrides": {
-    "esbuild": "0.28.1"
+    "@babel/core": "7.29.6",
+    "esbuild": "0.28.1",
+    "vite": "7.3.5"
   }
 }

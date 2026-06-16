@@ -17,6 +17,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { AddOrderItemDto } from './dto/add-order-item.dto';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrdersService } from './orders.service';
+import { UpdateOrderDetailStatusDto } from './dto/update-order-detail-status.dto';
 
 type AuthenticatedUser = {
   sub: number;
@@ -67,6 +68,20 @@ export class OrdersController {
   @Roles('CAMARERO')
   sendToKitchen(@Param('id', ParseIntPipe) id: number) {
     return this.ordersService.sendToKitchen(id);
+  }
+
+  @Patch(':orderId/items/:detailId/status')
+  @Roles('ADMIN', 'CAMARERO', 'COCINA')
+  updateDetailStatus(
+    @Param('orderId', ParseIntPipe) orderId: number,
+    @Param('detailId', ParseIntPipe) detailId: number,
+    @Body() updateOrderDetailStatusDto: UpdateOrderDetailStatusDto,
+  ) {
+    return this.ordersService.updateDetailStatus(
+      orderId,
+      detailId,
+      updateOrderDetailStatusDto,
+    );
   }
 
   @Patch(':id/close')

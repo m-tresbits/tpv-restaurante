@@ -13,6 +13,7 @@ import { AddOrderItemDto } from './dto/add-order-item.dto';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderDetail } from './order-detail.entity';
 import { Order } from './order.entity';
+import { UpdateOrderDetailStatusDto } from './dto/update-order-detail-status.dto';
 
 @Injectable()
 export class OrdersService {
@@ -136,6 +137,53 @@ export class OrdersService {
 
     await this.orderDetailsRepository.save(detail);
     await this.updateTotal(order.id);
+
+    return this.findOne(order.id);
+  }
+
+  async updateDetailStatus(
+    orderId: number,
+    detailId: number,
+    updateOrderDetailStatusDto: UpdateOrderDetailStatusDto,
+  ) {
+    const order = await this.findOne(orderId);
+
+    if (order.estado === 'CERRADO' || order.estado === 'CANCELADO') {
+      throw new BadRequestException(
+        'No se puede modificar un pedido cerrado o cancelado',
+      );
+    }
+
+    const detail = await this.orderDetailsRepository.findOne({
+      where: {
+        id: detailId,
+        order: {
+          id: orderId,
+        },
+      },
+      relations: {
+        product: true,
+      },
+    });
+
+    if (!detail) {
+      throw new NotFoundException('Línea de pedido no encontrada');
+    }
+
+    if (
+      updateOrderDetailStatusDto.estado === 'EN_PREPARACION' ||
+      updateOrderDetailStatusDto.estado === 'LISTO'
+    ) {
+      if (order.estado !== 'EN_COCINA') {
+        throw new BadRequestException(
+          'Solo se pueden preparar productos de pedidos enviados a cocina',
+        );
+      }
+    }
+
+    detail.estado = updateOrderDetailStatusDto.estado;
+
+    await this.orderDetailsRepository.save(detail);
 
     return this.findOne(order.id);
   }

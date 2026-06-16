@@ -376,6 +376,45 @@ POST http://localhost:3000/orders/1/items
 ```
 
 ---
+-- ESTADOS DE COMANDAS EN COCINA --
+
+COCINA marca una línea del pedido como en preparación.
+
+```http
+PATCH http://localhost:3000/orders/1/items/1/status
+```
+
+```json
+{
+  "estado": "EN_PREPARACION"
+}
+```
+
+COCINA marca una línea del pedido como lista.
+
+```http
+PATCH http://localhost:3000/orders/1/items/1/status
+```
+
+```json
+{
+  "estado": "LISTO"
+}
+```
+
+CAMARERO marca una línea del pedido como servida.
+
+```http
+PATCH http://localhost:3000/orders/1/items/1/status
+```
+
+```json
+{
+  "estado": "SERVIDO"
+}
+```
+
+---
 
 ## Notes
 

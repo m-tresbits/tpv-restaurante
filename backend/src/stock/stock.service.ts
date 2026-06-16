@@ -132,67 +132,6 @@ export class StockService {
     return product;
   }
 
-  async decreaseDailyStock(productId: number, quantity: number, fecha: string) {
-    const normalizedDate = this.normalizeDate(fecha);
-
-    const stock = await this.stockRepository.findOne({
-      where: {
-        product: {
-          id: productId,
-        },
-        fecha: normalizedDate,
-      },
-      relations: {
-        product: true,
-      },
-    });
-
-    if (!stock) {
-      throw new BadRequestException(
-        'No hay stock diario configurado para este producto',
-      );
-    }
-
-    if (stock.cantidadDisponible < quantity) {
-      throw new BadRequestException(
-        'No hay stock suficiente para este producto',
-      );
-    }
-
-    stock.cantidadDisponible -= quantity;
-
-    await this.stockRepository.save(stock);
-
-    return stock;
-  }
-
-  async increaseDailyStock(productId: number, quantity: number, fecha: string) {
-    const normalizedDate = this.normalizeDate(fecha);
-
-    const stock = await this.stockRepository.findOne({
-      where: {
-        product: {
-          id: productId,
-        },
-        fecha: normalizedDate,
-      },
-    });
-
-    if (!stock) {
-      return null;
-    }
-
-    stock.cantidadDisponible += quantity;
-
-    if (stock.cantidadDisponible > stock.cantidadInicial) {
-      stock.cantidadDisponible = stock.cantidadInicial;
-    }
-
-    await this.stockRepository.save(stock);
-
-    return stock;
-  }
-
   private normalizeDate(fecha: string) {
     const normalizedDate = fecha.trim();
 

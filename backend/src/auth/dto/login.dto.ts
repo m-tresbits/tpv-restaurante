@@ -1,10 +1,11 @@
-import { IsString, Length } from 'class-validator';
+import { IsNotEmpty, IsString, Matches } from 'class-validator';
 
 export class LoginDto {
   @IsString()
+  @IsNotEmpty()
   nombre!: string;
 
   @IsString()
-  @Length(4, 4)
+  @Matches(/^\d{4}$/)
   pin!: string;
 }

@@ -18,6 +18,12 @@ import { Order } from './order.entity';
 
 @Injectable()
 export class OrdersService {
+  private readonly activeOrderStatuses = [
+    'ABIERTO',
+    'EN_COCINA',
+    'SERVIDO',
+  ] as const;
+
   constructor(
     @InjectRepository(Order)
     private readonly ordersRepository: Repository<Order>,
@@ -35,7 +41,7 @@ export class OrdersService {
   findOpen() {
     return this.ordersRepository.find({
       where: {
-        estado: In(['ABIERTO', 'EN_COCINA']),
+        estado: In(this.activeOrderStatuses),
       },
       relations: {
         table: true,
@@ -85,7 +91,7 @@ export class OrdersService {
         table: {
           id: table.id,
         },
-        estado: In(['ABIERTO', 'EN_COCINA']),
+        estado: In(this.activeOrderStatuses),
       },
     });
 

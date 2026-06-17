@@ -13,6 +13,7 @@ import { ProductsModule } from './products/products.module';
 import { TablesModule } from './tables/tables.module';
 import { OrdersModule } from './orders/orders.module';
 import { StockModule } from './stock/stock.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { StockModule } from './stock/stock.module';
     TablesModule,
     OrdersModule,
     StockModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -6,23 +6,27 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  const allowedOrigins = ['http://localhost:4200'];
+  const normalizeOrigin = (origin: string) => origin.replace(/\/$/, '');
 
-  if (process.env.FRONTEND_URL) {
-    allowedOrigins.push(process.env.FRONTEND_URL);
-  }
+  const allowedOrigins = [
+    'http://localhost:4200',
+    'https://tpv-restaurante.netlify.app',
+    process.env.FRONTEND_URL,
+  ]
+    .filter((origin): origin is string => Boolean(origin))
+    .map((origin) => normalizeOrigin(origin));
 
   app.enableCors({
     origin: (
       origin: string | undefined,
       callback: (error: Error | null, allow?: boolean) => void,
     ) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin || allowedOrigins.includes(normalizeOrigin(origin))) {
         callback(null, true);
         return;
       }
 
-      callback(new Error('Origen no permitido por CORS'), false);
+      callback(null, false);
     },
     credentials: true,
   });

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -18,6 +19,7 @@ import { AddOrderItemDto } from './dto/add-order-item.dto';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrdersService } from './orders.service';
 import { UpdateOrderDetailStatusDto } from './dto/update-order-detail-status.dto';
+import { UpdateOrderItemQuantityDto } from './dto/update-order-item-quantity.dto';
 
 type AuthenticatedUser = {
   sub: number;
@@ -62,6 +64,29 @@ export class OrdersController {
     @Body() addOrderItemDto: AddOrderItemDto,
   ) {
     return this.ordersService.addItem(id, addOrderItemDto);
+  }
+
+  @Patch(':orderId/items/:detailId/quantity')
+  @Roles('CAMARERO')
+  updateItemQuantity(
+    @Param('orderId', ParseIntPipe) orderId: number,
+    @Param('detailId', ParseIntPipe) detailId: number,
+    @Body() updateOrderItemQuantityDto: UpdateOrderItemQuantityDto,
+  ) {
+    return this.ordersService.updateItemQuantity(
+      orderId,
+      detailId,
+      updateOrderItemQuantityDto,
+    );
+  }
+
+  @Delete(':orderId/items/:detailId')
+  @Roles('CAMARERO')
+  removeItem(
+    @Param('orderId', ParseIntPipe) orderId: number,
+    @Param('detailId', ParseIntPipe) detailId: number,
+  ) {
+    return this.ordersService.removeItem(orderId, detailId);
   }
 
   @Post(':id/send-to-kitchen')

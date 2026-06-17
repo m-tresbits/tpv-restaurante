@@ -73,10 +73,30 @@ export class StockPanel {
   }
 
   protected stockStatus(product: Product): string {
-    if (this.productStock(product) <= 0) {
+    const stock = this.productStock(product);
+
+    if (stock <= 0) {
       return 'Sin stock';
     }
 
+    if (stock <= 5) {
+      return 'Stock bajo';
+    }
+
     return 'Disponible';
+  }
+
+  protected stockLevel(product: Product): 'empty' | 'low' | 'available' {
+    const stock = this.productStock(product);
+
+    if (stock <= 0) {
+      return 'empty';
+    }
+
+    if (stock <= 5) {
+      return 'low';
+    }
+
+    return 'available';
   }
 }

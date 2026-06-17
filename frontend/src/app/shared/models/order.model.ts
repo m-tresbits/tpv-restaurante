@@ -7,7 +7,7 @@ export type OrderDetailStatus = 'PENDIENTE' | 'EN_PREPARACION' | 'LISTO' | 'SERV
 
 export type OrderDetail = {
   id: number;
-  product: Product;
+  product: Omit<Product, 'category'> & { category?: Product['category'] };
   cantidad: number;
   precioUnitario: string;
   estado: OrderDetailStatus;
@@ -21,6 +21,7 @@ export type Order = {
   table: RestaurantTable;
   estado: OrderStatus;
   fechaCreacion: string;
+  fechaEnvioCocina?: string | null;
   fechaCierre: string | null;
   total: string;
   details: OrderDetail[];
@@ -39,4 +40,8 @@ export type AddOrderItemRequest = {
 
 export type UpdateOrderDetailStatusRequest = {
   estado: OrderDetailStatus;
+};
+
+export type UpdateOrderItemQuantityRequest = {
+  cantidad: number;
 };

@@ -7,6 +7,7 @@ import {
   CreateOrderRequest,
   Order,
   UpdateOrderDetailStatusRequest,
+  UpdateOrderItemQuantityRequest,
 } from '../../../shared/models/order.model';
 import { API_BASE_URL } from '../api.config';
 
@@ -38,6 +39,21 @@ export class OrdersApiService {
 
   addItem(orderId: number, item: AddOrderItemRequest): Observable<Order> {
     return this.http.post<Order>(`${API_BASE_URL}/orders/${orderId}/items`, item);
+  }
+
+  updateItemQuantity(
+    orderId: number,
+    detailId: number,
+    request: UpdateOrderItemQuantityRequest,
+  ): Observable<Order> {
+    return this.http.patch<Order>(
+      `${API_BASE_URL}/orders/${orderId}/items/${detailId}/quantity`,
+      request,
+    );
+  }
+
+  removeItem(orderId: number, detailId: number): Observable<Order> {
+    return this.http.delete<Order>(`${API_BASE_URL}/orders/${orderId}/items/${detailId}`);
   }
 
   sendToKitchen(orderId: number): Observable<Order> {

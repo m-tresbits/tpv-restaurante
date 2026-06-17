@@ -6,7 +6,7 @@ import { OrdersApiService } from '../../../../core/api/services/orders-api.servi
 import { ProductsApiService } from '../../../../core/api/services/products-api.service';
 import { StockApiService } from '../../../../core/api/services/stock-api.service';
 import { TablesApiService } from '../../../../core/api/services/tables-api.service';
-import { Order, OrderDetail } from '../../../../shared/models/order.model';
+import { Order, OrderDetail, OrderDetailStatus } from '../../../../shared/models/order.model';
 import { Product } from '../../../../shared/models/product.model';
 import { ProductStock } from '../../../../shared/models/stock.model';
 import { RestaurantTable, TableStatus } from '../../../../shared/models/table.model';
@@ -29,6 +29,8 @@ export class WaiterHome implements OnInit {
   protected readonly openOrders = signal<Order[]>([]);
   protected readonly selectedTable = signal<RestaurantTable | null>(null);
   protected readonly activeOrder = signal<Order | null>(null);
+  protected readonly acknowledgedReadyDetailIds = signal<Set<number>>(new Set());
+  protected readonly isMenuVisible = signal(false);
 
   protected readonly isLoading = signal(false);
   protected readonly isSaving = signal(false);
@@ -47,6 +49,8 @@ export class WaiterHome implements OnInit {
 
     this.selectedTable.set(table);
     this.activeOrder.set(order);
+    this.acknowledgeReadyDetails(order);
+    this.setInitialMenuVisibility(order);
   }
 
   protected tableStatusLabel(status: TableStatus): string {
@@ -60,10 +64,6 @@ export class WaiterHome implements OnInit {
     return labels[status];
   }
 
-  protected tableStatusClass(status: TableStatus): string {
-    return `waiter-home__table--${status.toLowerCase()}`;
-  }
-
   protected canOpenOrder(table: RestaurantTable): boolean {
     return table.estado === 'LIBRE' || table.estado === 'OCUPADA';
   }
@@ -73,15 +73,71 @@ export class WaiterHome implements OnInit {
   }
 
   protected manageOrderLabel(table: RestaurantTable): string {
-    return this.hasOpenOrder(table) ? 'Abrir pedido activo' : 'Crear pedido';
+    const order = this.findOpenOrderByTable(table.id);
+
+    if (!order) {
+      return 'Crear pedido';
+    }
+
+    if (this.selectedTable()?.id !== table.id || this.activeOrder()?.id !== order.id) {
+      return 'Abrir pedido activo';
+    }
+
+    if (!this.canAddProducts(order)) {
+      return 'Abrir pedido activo';
+    }
+
+    if (this.isMenuVisible()) {
+      return 'Ocultar carta';
+    }
+
+    if (order.estado === 'EN_COCINA') {
+      return 'Añadir más productos';
+    }
+
+    return 'Mostrar carta';
   }
 
   protected canEditOrder(order: Order): boolean {
     return order.estado === 'ABIERTO';
   }
 
+  protected canAddProducts(order: Order): boolean {
+    return order.estado === 'ABIERTO' || order.estado === 'EN_COCINA';
+  }
+
+  protected orderStatusLabel(order: Order): string {
+    if (order.estado === 'ABIERTO') {
+      return `Pedido activo #${order.id}`;
+    }
+
+    if (order.estado === 'EN_COCINA') {
+      return `Pedido #${order.id} en cocina`;
+    }
+
+    return `Pedido #${order.id}`;
+  }
+
   protected canSendToKitchen(order: Order): boolean {
     return order.estado === 'ABIERTO' && this.orderDetails(order).length > 0;
+  }
+
+  protected productsSectionTitle(order: Order): string {
+    return order.estado === 'EN_COCINA'
+      ? 'Añadir productos adicionales al pedido'
+      : 'Carta disponible';
+  }
+
+  protected orderHelperText(order: Order): string {
+    if (order.estado === 'ABIERTO') {
+      return 'Puedes añadir productos y editar líneas antes de enviar a cocina.';
+    }
+
+    if (order.estado === 'EN_COCINA') {
+      return 'Puedes añadir nuevos productos, pero no modificar líneas ya enviadas.';
+    }
+
+    return 'Pedido en modo solo lectura para camarero.';
   }
 
   protected canCloseOrder(order: Order): boolean {
@@ -89,14 +145,65 @@ export class WaiterHome implements OnInit {
   }
 
   protected orderDetails(order: Order): OrderDetail[] {
-    return order.details ?? [];
+    const priority: Record<OrderDetailStatus, number> = {
+      LISTO: 1,
+      EN_PREPARACION: 2,
+      PENDIENTE: 3,
+      SERVIDO: 4,
+      CANCELADO: 5,
+    };
+
+    return [...(order.details ?? [])].sort((firstDetail, secondDetail) => {
+      const priorityDifference = priority[firstDetail.estado] - priority[secondDetail.estado];
+
+      if (priorityDifference !== 0) {
+        return priorityDifference;
+      }
+
+      const firstCreatedAt = new Date(firstDetail.createdAt).getTime();
+      const secondCreatedAt = new Date(secondDetail.createdAt).getTime();
+
+      if (firstCreatedAt !== secondCreatedAt) {
+        return firstCreatedAt - secondCreatedAt;
+      }
+
+      return firstDetail.id - secondDetail.id;
+    });
   }
 
-  protected availableStock(product: Product): number {
+  protected getDetailStatusLabel(status: OrderDetailStatus): string {
+    const labels: Record<OrderDetailStatus, string> = {
+      PENDIENTE: 'Pendiente',
+      EN_PREPARACION: 'En preparación',
+      LISTO: 'Listo para servir',
+      SERVIDO: 'Servido',
+      CANCELADO: 'Cancelado',
+    };
+
+    return labels[status];
+  }
+
+  protected hasReadyNotification(table: RestaurantTable): boolean {
+    const order = this.findOpenOrderByTable(table.id);
+
+    if (!order) {
+      return false;
+    }
+
+    return this.getReadyDetails(order).some(
+      (detail) => !this.acknowledgedReadyDetailIds().has(detail.id),
+    );
+  }
+
+  protected canServeDetail(order: Order, detail: OrderDetail): boolean {
+    return order.estado !== 'CERRADO' && order.estado !== 'CANCELADO' && detail.estado === 'LISTO';
+  }
+
+  protected availableStock(product: Pick<Product, 'id'>): number {
     return Number(this.findStockByProduct(product)?.cantidad ?? 0);
   }
 
-  protected hasAvailableStock(product: Product): boolean {
+  protected hasAvailableStock(product: Pick<Product, 'id'>): boolean {
     return this.availableStock(product) > 0;
   }
 
@@ -143,6 +250,16 @@ export class WaiterHome implements OnInit {
       return;
     }
 
+    const currentOrder = this.activeOrder();
+
+    if (this.selectedTable()?.id === table.id && currentOrder) {
+      if (this.canAddProducts(currentOrder)) {
+        this.isMenuVisible.update((visible) => !visible);
+      }
+
+      return;
+    }
+
     this.isSaving.set(true);
     this.errorMessage.set(null);
 
@@ -158,6 +275,8 @@ export class WaiterHome implements OnInit {
           this.activeOrder.set(openedOrder);
           this.replaceTable(openedOrder.table);
           this.selectedTable.set(openedOrder.table);
+          this.acknowledgeReadyDetails(openedOrder);
+          this.setInitialMenuVisibility(openedOrder);
           this.isSaving.set(false);
           return;
         }
@@ -174,7 +293,7 @@ export class WaiterHome implements OnInit {
   protected addProductToOrder(product: Product): void {
     const order = this.activeOrder();
 
-    if (!order || !this.canEditOrder(order) || this.isSaving()) {
+    if (!order || !this.canAddProducts(order) || this.isSaving()) {
       return;
     }
 
@@ -209,6 +328,78 @@ export class WaiterHome implements OnInit {
       });
   }
 
+  protected increaseDetailQuantity(detail: OrderDetail): void {
+    this.updateDetailQuantity(detail, detail.cantidad + 1);
+  }
+
+  protected decreaseDetailQuantity(detail: OrderDetail): void {
+    if (detail.cantidad <= 1) {
+      this.removeDetail(detail);
+      return;
+    }
+
+    this.updateDetailQuantity(detail, detail.cantidad - 1);
+  }
+
+  protected removeDetail(detail: OrderDetail): void {
+    const order = this.activeOrder();
+
+    if (!order || !this.canEditOrder(order) || this.isSaving()) {
+      return;
+    }
+
+    this.isSaving.set(true);
+    this.errorMessage.set(null);
+
+    this.ordersApiService.removeItem(order.id, detail.id).subscribe({
+      next: (updatedOrder) => {
+        this.syncUpdatedOrder(updatedOrder);
+        this.increaseProductStock(detail.product.id, detail.cantidad);
+        this.isSaving.set(false);
+      },
+      error: (error: unknown) => {
+        this.errorMessage.set(
+          this.getApiErrorMessage(error, 'No se ha podido eliminar la línea del pedido.'),
+        );
+        this.isSaving.set(false);
+      },
+    });
+  }
+
+  protected getLineSubtotal(detail: OrderDetail): string {
+    return `${(detail.cantidad * Number(detail.precioUnitario)).toFixed(2)} €`;
+  }
+
+  protected markDetailServed(detail: OrderDetail): void {
+    const order = this.activeOrder();
+
+    if (!order || !this.canServeDetail(order, detail) || this.isSaving()) {
+      return;
+    }
+
+    this.isSaving.set(true);
+    this.errorMessage.set(null);
+
+    this.ordersApiService.updateDetailStatus(order.id, detail.id, { estado: 'SERVIDO' }).subscribe({
+      next: (updatedOrder) => {
+        this.syncUpdatedOrder(updatedOrder);
+        this.acknowledgedReadyDetailIds.update((ids) => {
+          const updatedIds = new Set(ids);
+          updatedIds.delete(detail.id);
+
+          return updatedIds;
+        });
+        this.isSaving.set(false);
+      },
+      error: (error: unknown) => {
+        this.errorMessage.set(
+          this.getApiErrorMessage(error, 'No se ha podido marcar la línea como servida.'),
+        );
+        this.isSaving.set(false);
+      },
+    });
+  }
+
   protected sendOrderToKitchen(): void {
     const order = this.activeOrder();
 
@@ -225,6 +416,7 @@ export class WaiterHome implements OnInit {
         this.activeOrder.set(updatedOrder);
         this.replaceTable(updatedOrder.table);
         this.selectedTable.set(updatedOrder.table);
+        this.isMenuVisible.set(false);
         this.isSaving.set(false);
       },
       error: (error: unknown) => {
@@ -287,6 +479,7 @@ export class WaiterHome implements OnInit {
         this.activeOrder.set(order);
         this.replaceTable(order.table);
         this.selectedTable.set(order.table);
+        this.isMenuVisible.set(true);
         this.isSaving.set(false);
       },
       error: (error: unknown) => {
@@ -295,6 +488,31 @@ export class WaiterHome implements OnInit {
             error,
             'No se ha podido crear el pedido para la mesa seleccionada.',
           ),
+        );
+        this.isSaving.set(false);
+      },
+    });
+  }
+
+  private updateDetailQuantity(detail: OrderDetail, quantity: number): void {
+    const order = this.activeOrder();
+
+    if (!order || !this.canEditOrder(order) || this.isSaving()) {
+      return;
+    }
+
+    this.isSaving.set(true);
+    this.errorMessage.set(null);
+
+    this.ordersApiService.updateItemQuantity(order.id, detail.id, { cantidad: quantity }).subscribe({
+      next: (updatedOrder) => {
+        this.syncUpdatedOrder(updatedOrder);
+        this.adjustProductStock(detail.product.id, detail.cantidad - quantity);
+        this.isSaving.set(false);
+      },
+      error: (error: unknown) => {
+        this.errorMessage.set(
+          this.getApiErrorMessage(error, 'No se ha podido actualizar la cantidad.'),
         );
         this.isSaving.set(false);
       },
@@ -364,6 +582,7 @@ export class WaiterHome implements OnInit {
   private finishOrder(order: Order): void {
     this.openOrders.update((orders) => orders.filter((openOrder) => openOrder.id !== order.id));
     this.activeOrder.set(null);
+    this.isMenuVisible.set(false);
     this.replaceTable(order.table);
     this.selectedTable.set(order.table);
     this.isSaving.set(false);
@@ -382,6 +601,14 @@ export class WaiterHome implements OnInit {
   }
 
   private decreaseProductStock(productId: number): void {
+    this.adjustProductStock(productId, -1);
+  }
+
+  private increaseProductStock(productId: number, quantity: number): void {
+    this.adjustProductStock(productId, quantity);
+  }
+
+  private adjustProductStock(productId: number, quantityDifference: number): void {
     this.stock.update((currentStock) =>
       currentStock.map((stock) => {
         if (stock.product.id !== productId) {
@@ -390,13 +617,42 @@ export class WaiterHome implements OnInit {
 
         return {
           ...stock,
-          cantidad: Math.max(stock.cantidad - 1, 0),
+          cantidad: Math.max(stock.cantidad + quantityDifference, 0),
         };
       }),
     );
   }
 
-  private findStockByProduct(product: Product): ProductStock | null {
+  private syncUpdatedOrder(updatedOrder: Order): void {
+    this.upsertOpenOrder(updatedOrder);
+    this.activeOrder.set(updatedOrder);
+    this.replaceTable(updatedOrder.table);
+    this.selectedTable.set(updatedOrder.table);
+  }
+
+  private setInitialMenuVisibility(order: Order | null): void {
+    this.isMenuVisible.set(order?.estado === 'ABIERTO');
+  }
+
+  private acknowledgeReadyDetails(order: Order | null): void {
+    if (!order) {
+      return;
+    }
+
+    const readyDetailIds = this.getReadyDetails(order).map((detail) => detail.id);
+
+    if (readyDetailIds.length === 0) {
+      return;
+    }
+
+    this.acknowledgedReadyDetailIds.update((ids) => new Set([...ids, ...readyDetailIds]));
+  }
+
+  private getReadyDetails(order: Order): OrderDetail[] {
+    return this.orderDetails(order).filter((detail) => detail.estado === 'LISTO');
+  }
+
+  private findStockByProduct(product: Pick<Product, 'id'>): ProductStock | null {
     return this.stock().find((stock) => Number(stock.product?.id) === Number(product.id)) ?? null;
   }
 
@@ -427,12 +683,17 @@ export class WaiterHome implements OnInit {
 
     if (!selectedTable) {
       this.activeOrder.set(null);
+      this.isMenuVisible.set(false);
       return;
     }
 
     const order = openOrders.find((openOrder) => openOrder.table.id === selectedTable.id) ?? null;
 
     this.activeOrder.set(order);
+
+    if (!order || !this.canAddProducts(order)) {
+      this.isMenuVisible.set(false);
+    }
   }
 
   private getApiErrorMessage(error: unknown, fallback: string): string {

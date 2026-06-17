@@ -48,9 +48,12 @@
 
         <small
           class="stock-panel__badge"
-          [class.stock-panel__badge--empty]="productStock(product) <= 0"
+          [class.stock-panel__badge--empty]="stockLevel(product) === 'empty'"
+          [class.stock-panel__badge--low]="stockLevel(product) === 'low'"
+          [class.stock-panel__badge--available]="stockLevel(product) === 'available'"
         >
-          {{ stockStatus(product) }}: {{ productStock(product) }}
+          <span>{{ stockStatus(product) }}</span>
+          <strong>{{ productStock(product) }}</strong>
         </small>
       </article>
     } @empty {

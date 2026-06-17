@@ -21,14 +21,22 @@
           <button
             type="button"
             class="waiter-home__table"
-            [class]="tableStatusClass(table.estado)"
+            [class.waiter-home__table--libre]="table.estado === 'LIBRE'"
+            [class.waiter-home__table--ocupada]="table.estado === 'OCUPADA'"
+            [class.waiter-home__table--reservada]="table.estado === 'RESERVADA'"
+            [class.waiter-home__table--inactiva]="table.estado === 'INACTIVA'"
             [class.waiter-home__table--selected]="selectedTable()?.id === table.id"
+            [class.waiter-home__table--ready-alert]="hasReadyNotification(table)"
             [disabled]="table.estado === 'INACTIVA'"
             (click)="selectTable(table)"
           >
             <strong>Mesa {{ table.numero }}</strong>
             <span>{{ table.capacidad }} personas</span>
             <small>{{ tableStatusLabel(table.estado) }}</small>
+
+            @if (hasReadyNotification(table)) {
+              <em>Producto listo</em>
+            }
           </button>
         } @empty {
           <p class="waiter-home__empty">No hay mesas registradas.</p>
@@ -120,16 +128,16 @@
             <section class="waiter-home__order">
               <header>
                 <div>
-                  <h3>Pedido #{{ order.id }}</h3>
-                  <p>Estado: {{ order.estado }}</p>
+                  <h3>{{ orderStatusLabel(order) }}</h3>
+                  <p>{{ orderHelperText(order) }}</p>
                 </div>
 
-                <strong>{{ order.total }} €</strong>
+                <strong>Total {{ order.total }} €</strong>
               </header>
 
-              @if (canEditOrder(order)) {
+              @if (canAddProducts(order) && isMenuVisible()) {
                 <section class="waiter-home__products">
-                  <h4>Carta disponible</h4>
+                  <h4>{{ productsSectionTitle(order) }}</h4>
 
                   <div class="waiter-home__product-list">
                     @for (product of products(); track product.id) {
@@ -157,14 +165,62 @@
                 <h4>Detalle del pedido</h4>
 
                 @for (detail of orderDetails(order); track detail.id) {
-                  <article class="waiter-home__line">
+                  <article
+                    class="waiter-home__line"
+                    [class.waiter-home__line--pending]="detail.estado === 'PENDIENTE'"
+                    [class.waiter-home__line--preparing]="detail.estado === 'EN_PREPARACION'"
+                    [class.waiter-home__line--ready]="detail.estado === 'LISTO'"
+                    [class.waiter-home__line--served]="detail.estado === 'SERVIDO'"
+                    [class.waiter-home__line--cancelled]="detail.estado === 'CANCELADO'"
+                  >
                     <div>
                       <strong>{{ detail.product.nombre }}</strong>
-                      <span>Cantidad: {{ detail.cantidad }}</span>
-                      <small>Estado: {{ detail.estado }}</small>
+                      <span>{{ detail.cantidad }} × {{ detail.precioUnitario }} €</span>
+                      <small>Estado: {{ getDetailStatusLabel(detail.estado) }}</small>
                     </div>
 
-                    <span>{{ detail.precioUnitario }} €</span>
+                    <div class="waiter-home__line-side">
+                      <span>{{ getLineSubtotal(detail) }}</span>
+
+                      @if (canEditOrder(order)) {
+                        <div class="waiter-home__line-actions" aria-label="Editar cantidad">
+                          <button
+                            type="button"
+                            class="waiter-home__quantity-action"
+                            [disabled]="isSaving()"
+                            (click)="decreaseDetailQuantity(detail)"
+                          >
+                            -
+                          </button>
+                          <span>{{ detail.cantidad }}</span>
+                          <button
+                            type="button"
+                            class="waiter-home__quantity-action"
+                            [disabled]="isSaving() || !hasAvailableStock(detail.product)"
+                            (click)="increaseDetailQuantity(detail)"
+                          >
+                            +
+                          </button>
+                          <button
+                            type="button"
+                            class="waiter-home__remove-line"
+                            [disabled]="isSaving()"
+                            (click)="removeDetail(detail)"
+                          >
+                            Quitar
+                          </button>
+                        </div>
+                      } @else if (canServeDetail(order, detail)) {
+                        <button
+                          type="button"
+                          class="waiter-home__serve-line"
+                          [disabled]="isSaving()"
+                          (click)="markDetailServed(detail)"
+                        >
+                          Marcar servido
+                        </button>
+                      }
+                    </div>
                   </article>
                 } @empty {
                   <p class="waiter-home__empty">Todavía no hay productos añadidos.</p>

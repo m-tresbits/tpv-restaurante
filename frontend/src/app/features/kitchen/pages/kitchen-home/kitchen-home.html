@@ -1,4 +1,107 @@
 <section class="kitchen-home">
-  <h1>Panel de cocina</h1>
-  <p>Área destinada a la visualización y seguimiento de comandas.</p>
+  <header class="kitchen-home__header">
+    <div>
+      <p class="kitchen-home__eyebrow">Cocina</p>
+      <h1>Panel de comandas</h1>
+      <p>
+        @if (kitchenOrders().length > 0) {
+          {{ kitchenOrders().length }} pedido(s) en cocina, ordenados por llegada.
+        } @else {
+          Sin comandas activas en este momento.
+        }
+      </p>
+    </div>
+
+    <div class="kitchen-home__header-actions">
+      <span class="kitchen-home__counter">{{ kitchenOrders().length }} en cocina</span>
+      <button type="button" class="kitchen-home__refresh" (click)="loadOrders()">Actualizar</button>
+    </div>
+  </header>
+
+  @if (errorMessage()) {
+    <p class="kitchen-home__message kitchen-home__message--error">
+      {{ errorMessage() }}
+    </p>
+  }
+
+  @if (isLoading()) {
+    <p class="kitchen-home__message">Cargando comandas...</p>
+  } @else if (kitchenOrders().length === 0) {
+    <article class="kitchen-home__empty">
+      <h2>No hay comandas pendientes</h2>
+      <p>Los pedidos enviados a cocina aparecerán en esta pantalla.</p>
+    </article>
+  } @else {
+    <div class="kitchen-home__orders">
+      @for (order of kitchenOrders(); track order.id) {
+        <article
+          class="kitchen-home__order"
+          [class.kitchen-home__order--ready]="isOrderReady(order)"
+        >
+          <header class="kitchen-home__order-header">
+            <div>
+              <div class="kitchen-home__meta">
+                <span class="kitchen-home__table">Mesa {{ order.table.numero }}</span>
+                <span class="kitchen-home__timer">{{ getKitchenElapsed(order) }}</span>
+              </div>
+              <h2>Pedido #{{ order.id }}</h2>
+              <p>{{ getKitchenDetails(order).length }} línea(s) · Total {{ getOrderTotal(order) }}</p>
+            </div>
+
+            <span class="kitchen-home__status">
+              {{ isOrderReady(order) ? 'Listo para servir' : 'En cocina' }}
+            </span>
+          </header>
+
+          <div class="kitchen-home__details">
+            @for (detail of getKitchenDetails(order); track detail.id) {
+              <div
+                class="kitchen-home__detail"
+                [class.kitchen-home__detail--ready]="detail.estado === 'LISTO'"
+                [class.kitchen-home__detail--burger]="getDetailTone(detail.product.nombre, detail.product.category?.nombre ?? '') === 'burger'"
+                [class.kitchen-home__detail--pizza]="getDetailTone(detail.product.nombre, detail.product.category?.nombre ?? '') === 'pizza'"
+                [class.kitchen-home__detail--meat]="getDetailTone(detail.product.nombre, detail.product.category?.nombre ?? '') === 'meat'"
+                [class.kitchen-home__detail--starter]="getDetailTone(detail.product.nombre, detail.product.category?.nombre ?? '') === 'starter'"
+                [class.kitchen-home__detail--salad]="getDetailTone(detail.product.nombre, detail.product.category?.nombre ?? '') === 'salad'"
+                [class.kitchen-home__detail--actionable]="getNextStatus(detail.estado) !== null"
+                [attr.role]="getNextStatus(detail.estado) ? 'button' : null"
+                [attr.tabindex]="getNextStatus(detail.estado) ? '0' : null"
+                (click)="advanceDetailStatus(order.id, detail)"
+                (keydown.enter)="advanceDetailStatus(order.id, detail)"
+                (keydown.space)="$event.preventDefault(); advanceDetailStatus(order.id, detail)"
+              >
+                <div class="kitchen-home__detail-main">
+                  <strong>{{ detail.cantidad }} × {{ detail.product.nombre }}</strong>
+                  <span>{{ getLineTotal(detail.cantidad, detail.precioUnitario) }}</span>
+
+                  @if (detail.observaciones) {
+                    <p>{{ detail.observaciones }}</p>
+                  }
+                </div>
+
+                <div class="kitchen-home__detail-actions">
+                  <span class="kitchen-home__detail-status">
+                    {{ getStatusLabel(detail.estado) }}
+                  </span>
+
+                  @if (getNextStatus(detail.estado); as nextStatus) {
+                    <button
+                      type="button"
+                      class="kitchen-home__action"
+                      [disabled]="updatingDetailId() === detail.id"
+                      (click)="$event.stopPropagation(); updateDetailStatus(order.id, detail.id, nextStatus)"
+                    >
+                      {{ getActionLabel(detail.estado) }}
+                    </button>
+                  } @else if (detail.estado === 'LISTO') {
+                    <span class="kitchen-home__ready-label">Lista</span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </article>
+      }
+    </div>
+  }
 </section>

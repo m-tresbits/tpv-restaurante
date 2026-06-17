@@ -140,9 +140,22 @@
   min-height: 5.5rem;
   padding: var(--space-4);
   border: 1px solid var(--color-border);
+  border-left-width: 0.35rem;
   border-radius: var(--radius-md);
   background: var(--color-surface);
   box-shadow: var(--shadow-sm);
+}
+
+.admin-home__card--good {
+  border-left-color: #22c55e;
+}
+
+.admin-home__card--warning {
+  border-left-color: #f59e0b;
+}
+
+.admin-home__card--danger {
+  border-left-color: #ef4444;
 }
 
 .admin-home__card span {
@@ -162,8 +175,27 @@
 
 .admin-home__card small {
   grid-area: detail;
+  width: fit-content;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
+.admin-home__card--good small {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.admin-home__card--warning small {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.admin-home__card--danger small {
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 .admin-home__placeholder {

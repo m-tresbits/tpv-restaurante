@@ -13,6 +13,7 @@ import { User } from '../users/user.entity';
 import { AddOrderItemDto } from './dto/add-order-item.dto';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDetailStatusDto } from './dto/update-order-detail-status.dto';
+import { UpdateOrderItemQuantityDto } from './dto/update-order-item-quantity.dto';
 import { OrderDetail } from './order-detail.entity';
 import { Order } from './order.entity';
 
@@ -120,9 +121,9 @@ export class OrdersService {
   async addItem(orderId: number, addOrderItemDto: AddOrderItemDto) {
     const order = await this.findOne(orderId);
 
-    if (order.estado !== 'ABIERTO') {
+    if (order.estado !== 'ABIERTO' && order.estado !== 'EN_COCINA') {
       throw new BadRequestException(
-        'Solo se pueden añadir productos a pedidos abiertos',
+        'Solo se pueden añadir productos a pedidos abiertos o enviados a cocina',
       );
     }
 
@@ -218,6 +219,131 @@ export class OrdersService {
     order.estado = 'EN_COCINA';
 
     await this.ordersRepository.save(order);
+
+    return this.findOne(order.id);
+  }
+
+  async removeItem(orderId: number, detailId: number) {
+    const order = await this.findOne(orderId);
+
+    this.ensureEditableOrder(order);
+
+    await this.dataSource.transaction(async (manager) => {
+      const stockRepository = manager.getRepository(ProductStock);
+      const orderDetailsRepository = manager.getRepository(OrderDetail);
+      const ordersRepository = manager.getRepository(Order);
+
+      const detail = await orderDetailsRepository.findOne({
+        where: {
+          id: detailId,
+          order: {
+            id: order.id,
+          },
+        },
+        relations: {
+          product: true,
+        },
+      });
+
+      if (!detail) {
+        throw new NotFoundException('Línea de pedido no encontrada');
+      }
+
+      const stock = await stockRepository.findOne({
+        where: {
+          productoId: detail.product.id,
+        },
+        lock: {
+          mode: 'pessimistic_write',
+        },
+      });
+
+      if (stock) {
+        stock.cantidad += detail.cantidad;
+        await stockRepository.save(stock);
+      }
+
+      await orderDetailsRepository.remove(detail);
+      await this.recalculateOrderTotal(
+        order.id,
+        orderDetailsRepository,
+        ordersRepository,
+      );
+    });
+
+    return this.findOne(order.id);
+  }
+
+  async updateItemQuantity(
+    orderId: number,
+    detailId: number,
+    updateOrderItemQuantityDto: UpdateOrderItemQuantityDto,
+  ) {
+    const order = await this.findOne(orderId);
+
+    this.ensureEditableOrder(order);
+
+    const newQuantity = this.normalizeQuantity(
+      updateOrderItemQuantityDto.cantidad,
+    );
+
+    await this.dataSource.transaction(async (manager) => {
+      const stockRepository = manager.getRepository(ProductStock);
+      const orderDetailsRepository = manager.getRepository(OrderDetail);
+      const ordersRepository = manager.getRepository(Order);
+
+      const detail = await orderDetailsRepository.findOne({
+        where: {
+          id: detailId,
+          order: {
+            id: order.id,
+          },
+        },
+        relations: {
+          product: true,
+        },
+      });
+
+      if (!detail) {
+        throw new NotFoundException('Línea de pedido no encontrada');
+      }
+
+      const quantityDifference = newQuantity - detail.cantidad;
+
+      if (quantityDifference !== 0) {
+        const stock = await stockRepository.findOne({
+          where: {
+            productoId: detail.product.id,
+          },
+          lock: {
+            mode: 'pessimistic_write',
+          },
+        });
+
+        if (!stock) {
+          throw new BadRequestException(
+            'No hay stock configurado para este producto',
+          );
+        }
+
+        if (quantityDifference > 0 && stock.cantidad < quantityDifference) {
+          throw new BadRequestException(
+            'No hay stock suficiente para este producto',
+          );
+        }
+
+        stock.cantidad -= quantityDifference;
+        await stockRepository.save(stock);
+
+        detail.cantidad = newQuantity;
+        await orderDetailsRepository.save(detail);
+        await this.recalculateOrderTotal(
+          order.id,
+          orderDetailsRepository,
+          ordersRepository,
+        );
+      }
+    });
 
     return this.findOne(order.id);
   }
@@ -409,6 +535,32 @@ export class OrdersService {
     }, 0);
 
     return total.toFixed(2);
+  }
+
+  private ensureEditableOrder(order: Order): void {
+    if (order.estado !== 'ABIERTO') {
+      throw new BadRequestException(
+        'Solo se pueden editar líneas de pedidos abiertos. El pedido ya está en cocina o finalizado.',
+      );
+    }
+  }
+
+  private async recalculateOrderTotal(
+    orderId: number,
+    orderDetailsRepository: Repository<OrderDetail>,
+    ordersRepository: Repository<Order>,
+  ): Promise<void> {
+    const details = await orderDetailsRepository.find({
+      where: {
+        order: {
+          id: orderId,
+        },
+      },
+    });
+
+    await ordersRepository.update(orderId, {
+      total: this.calculateTotal(details),
+    });
   }
 
   private normalizeQuantity(quantity: number) {

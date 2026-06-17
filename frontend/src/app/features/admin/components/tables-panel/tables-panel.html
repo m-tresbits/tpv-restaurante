@@ -32,7 +32,13 @@
 
   <div class="tables-panel__list">
     @for (table of tables(); track table.id) {
-      <article class="tables-panel__item">
+      <article
+        class="tables-panel__item"
+        [class.tables-panel__item--free]="table.estado === 'LIBRE'"
+        [class.tables-panel__item--occupied]="table.estado === 'OCUPADA'"
+        [class.tables-panel__item--reserved]="table.estado === 'RESERVADA'"
+        [class.tables-panel__item--inactive]="table.estado === 'INACTIVA'"
+      >
         @if (editingTableId() === table.id) {
           <form
             class="tables-panel__edit-form"

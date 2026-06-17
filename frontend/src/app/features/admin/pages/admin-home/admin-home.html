@@ -65,28 +65,48 @@
     } @else {
       @if (activeSection() === 'dashboard') {
         <section class="admin-home__summary">
-          <article class="admin-home__card">
+          <article
+            class="admin-home__card"
+            [class.admin-home__card--good]="metricTone(activeCategoriesCount(), categories().length) === 'good'"
+            [class.admin-home__card--warning]="metricTone(activeCategoriesCount(), categories().length) === 'warning'"
+            [class.admin-home__card--danger]="metricTone(activeCategoriesCount(), categories().length) === 'danger'"
+          >
             <span>Categorías</span>
             <strong>{{ categories().length }}</strong>
-            <small>{{ activeCategoriesCount() }} activas</small>
+            <small>{{ activeCategoriesCount() }}/{{ categories().length }} activas</small>
           </article>
 
-          <article class="admin-home__card">
+          <article
+            class="admin-home__card"
+            [class.admin-home__card--good]="metricTone(activeProductsCount(), products().length) === 'good'"
+            [class.admin-home__card--warning]="metricTone(activeProductsCount(), products().length) === 'warning'"
+            [class.admin-home__card--danger]="metricTone(activeProductsCount(), products().length) === 'danger'"
+          >
             <span>Productos</span>
             <strong>{{ products().length }}</strong>
-            <small>{{ activeProductsCount() }} disponibles</small>
+            <small>{{ activeProductsCount() }}/{{ products().length }} disponibles</small>
           </article>
 
-          <article class="admin-home__card">
+          <article
+            class="admin-home__card"
+            [class.admin-home__card--good]="metricTone(freeTablesCount(), tables().length) === 'good'"
+            [class.admin-home__card--warning]="metricTone(freeTablesCount(), tables().length) === 'warning'"
+            [class.admin-home__card--danger]="metricTone(freeTablesCount(), tables().length) === 'danger'"
+          >
             <span>Mesas</span>
             <strong>{{ tables().length }}</strong>
-            <small>{{ freeTablesCount() }} libres</small>
+            <small>{{ freeTablesCount() }}/{{ tables().length }} libres</small>
           </article>
 
-          <article class="admin-home__card">
+          <article
+            class="admin-home__card"
+            [class.admin-home__card--good]="metricTone(stockConfiguredCount(), activeProductsCount()) === 'good'"
+            [class.admin-home__card--warning]="metricTone(stockConfiguredCount(), activeProductsCount()) === 'warning'"
+            [class.admin-home__card--danger]="metricTone(stockConfiguredCount(), activeProductsCount()) === 'danger'"
+          >
             <span>Stock actual</span>
-            <strong>{{ stock().length }}</strong>
-            <small>registros configurados</small>
+            <strong>{{ stockConfiguredCount() }}</strong>
+            <small>{{ stockConfiguredCount() }}/{{ activeProductsCount() }} productos activos</small>
           </article>
         </section>
       }

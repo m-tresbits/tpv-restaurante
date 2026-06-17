@@ -15,6 +15,7 @@ import { StockPanel } from '../../components/stock-panel/stock-panel';
 import { TablesPanel } from '../../components/tables-panel/tables-panel';
 
 type AdminSection = 'dashboard' | 'categories' | 'products' | 'tables' | 'stock';
+type MetricTone = 'good' | 'warning' | 'danger';
 
 @Component({
   selector: 'app-admin-home',
@@ -67,6 +68,24 @@ export class AdminHome implements OnInit {
 
   protected freeTablesCount(): number {
     return this.tables().filter((table) => table.estado === 'LIBRE').length;
+  }
+
+  protected stockConfiguredCount(): number {
+    const activeProductIds = new Set(this.products().filter((product) => product.activo).map((product) => product.id));
+
+    return this.stock().filter((stock) => activeProductIds.has(stock.product.id)).length;
+  }
+
+  protected metricTone(value: number, total: number): MetricTone {
+    if (value <= 0 || total <= 0) {
+      return 'danger';
+    }
+
+    if (value >= total) {
+      return 'good';
+    }
+
+    return 'warning';
   }
 
   private loadDashboard(): void {

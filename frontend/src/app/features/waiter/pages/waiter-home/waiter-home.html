@@ -5,11 +5,13 @@
       <p>Selecciona una mesa para gestionar su pedido.</p>
     </div>
 
-    <button type="button" class="waiter-home__refresh" (click)="reload()">Actualizar</button>
+    <button type="button" class="waiter-home__refresh" [disabled]="isSaving()" (click)="reload()">
+      Actualizar
+    </button>
   </header>
 
   @if (isLoading()) {
-    <p class="waiter-home__status">Cargando mesas...</p>
+    <p class="waiter-home__status">Cargando datos...</p>
   } @else if (errorMessage()) {
     <p class="waiter-home__error">{{ errorMessage() }}</p>
   } @else {
@@ -70,7 +72,7 @@
               </button>
             }
 
-            @if (table.estado === 'OCUPADA') {
+            @if (table.estado === 'OCUPADA' && !hasOpenOrder(table)) {
               <button
                 type="button"
                 class="waiter-home__secondary-action"
@@ -79,6 +81,12 @@
               >
                 Liberar mesa
               </button>
+            }
+
+            @if (table.estado === 'OCUPADA' && hasOpenOrder(table)) {
+              <p class="waiter-home__info">
+                La mesa tiene un pedido activo. Para liberarla, cierra o cancela el pedido.
+              </p>
             }
 
             @if (table.estado === 'RESERVADA') {
@@ -93,18 +101,106 @@
             }
 
             @if (canOpenOrder(table)) {
-              <button type="button" class="waiter-home__primary-action">Gestionar pedido</button>
-
-              <p class="waiter-home__hint">
-                En el siguiente bloque se conectará esta acción con la creación o recuperación del
-                pedido activo.
-              </p>
+              <button
+                type="button"
+                class="waiter-home__primary-action"
+                [disabled]="isSaving()"
+                (click)="manageOrder(table)"
+              >
+                {{ manageOrderLabel(table) }}
+              </button>
             } @else {
               <p class="waiter-home__warning">
                 Esta mesa no está disponible para gestionar pedidos.
               </p>
             }
           </div>
+
+          @if (activeOrder(); as order) {
+            <section class="waiter-home__order">
+              <header>
+                <div>
+                  <h3>Pedido #{{ order.id }}</h3>
+                  <p>Estado: {{ order.estado }}</p>
+                </div>
+
+                <strong>{{ order.total }} €</strong>
+              </header>
+
+              @if (canEditOrder(order)) {
+                <section class="waiter-home__products">
+                  <h4>Carta disponible</h4>
+
+                  <div class="waiter-home__product-list">
+                    @for (product of products(); track product.id) {
+                      <button
+                        type="button"
+                        class="waiter-home__product"
+                        [disabled]="isSaving()"
+                        (click)="addProductToOrder(product)"
+                      >
+                        <span>{{ product.nombre }}</span>
+                        <strong>{{ product.precio }} €</strong>
+                      </button>
+                    } @empty {
+                      <p class="waiter-home__empty">No hay productos disponibles.</p>
+                    }
+                  </div>
+                </section>
+              }
+
+              <section class="waiter-home__lines">
+                <h4>Detalle del pedido</h4>
+
+                @for (detail of orderDetails(order); track detail.id) {
+                  <article class="waiter-home__line">
+                    <div>
+                      <strong>{{ detail.product.nombre }}</strong>
+                      <span>Cantidad: {{ detail.cantidad }}</span>
+                      <small>Estado: {{ detail.estado }}</small>
+                    </div>
+
+                    <span>{{ detail.precioUnitario }} €</span>
+                  </article>
+                } @empty {
+                  <p class="waiter-home__empty">Todavía no hay productos añadidos.</p>
+                }
+              </section>
+
+              @if (canSendToKitchen(order)) {
+                <button
+                  type="button"
+                  class="waiter-home__primary-action"
+                  [disabled]="isSaving()"
+                  (click)="sendOrderToKitchen()"
+                >
+                  Enviar a cocina
+                </button>
+              }
+
+              @if (canCloseOrder(order)) {
+                <div class="waiter-home__order-actions">
+                  <button
+                    type="button"
+                    class="waiter-home__primary-action"
+                    [disabled]="isSaving()"
+                    (click)="closeOrder()"
+                  >
+                    Cerrar pedido y liberar mesa
+                  </button>
+
+                  <button
+                    type="button"
+                    class="waiter-home__secondary-action"
+                    [disabled]="isSaving()"
+                    (click)="cancelOrder()"
+                  >
+                    Cancelar pedido
+                  </button>
+                </div>
+              }
+            </section>
+          }
         } @else {
           <h2>Sin mesa seleccionada</h2>
           <p>Selecciona una mesa del listado para consultar su estado y continuar con el pedido.</p>

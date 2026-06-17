@@ -7,14 +7,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Product } from '../products/product.entity';
-import { UpsertDailyStockDto } from './dto/upsert-daily-stock.dto';
-import { DailyStock } from './stock.entity';
+import { UpdateStockDto } from './dto/update-stock.dto';
+import { ProductStock } from './stock.entity';
 
 @Injectable()
 export class StockService {
   constructor(
-    @InjectRepository(DailyStock)
-    private readonly stockRepository: Repository<DailyStock>,
+    @InjectRepository(ProductStock)
+    private readonly stockRepository: Repository<ProductStock>,
     @InjectRepository(Product)
     private readonly productsRepository: Repository<Product>,
   ) {}
@@ -27,39 +27,17 @@ export class StockService {
         },
       },
       order: {
-        fecha: 'DESC',
-        id: 'ASC',
-      },
-    });
-  }
-
-  findByDate(fecha: string) {
-    const normalizedDate = this.normalizeDate(fecha);
-
-    return this.stockRepository.find({
-      where: {
-        fecha: normalizedDate,
-      },
-      relations: {
         product: {
-          category: true,
+          nombre: 'ASC',
         },
       },
-      order: {
-        id: 'ASC',
-      },
     });
   }
 
-  async findByProductAndDate(productId: number, fecha: string) {
-    const normalizedDate = this.normalizeDate(fecha);
-
+  async findByProduct(productId: number) {
     const stock = await this.stockRepository.findOne({
       where: {
-        product: {
-          id: productId,
-        },
-        fecha: normalizedDate,
+        productoId: productId,
       },
       relations: {
         product: {
@@ -69,15 +47,15 @@ export class StockService {
     });
 
     if (!stock) {
-      throw new NotFoundException('Stock diario no encontrado');
+      throw new NotFoundException('Stock no encontrado');
     }
 
     return stock;
   }
 
-  async upsertDailyStock(upsertDailyStockDto: UpsertDailyStockDto) {
-    const fecha = this.normalizeDate(upsertDailyStockDto.fecha);
-    const product = await this.findProductById(upsertDailyStockDto.productoId);
+  async update(productId: number, updateStockDto: UpdateStockDto) {
+    const product = await this.findProductById(productId);
+    const cantidad = this.normalizeQuantity(updateStockDto.cantidad);
 
     if (!product.activo) {
       throw new BadRequestException(
@@ -85,37 +63,27 @@ export class StockService {
       );
     }
 
-    const existingStock = await this.stockRepository.findOne({
+    const stock = await this.stockRepository.findOne({
       where: {
-        product: {
-          id: product.id,
-        },
-        fecha,
-      },
-      relations: {
-        product: true,
+        productoId: product.id,
       },
     });
 
-    if (existingStock) {
-      existingStock.cantidadInicial = upsertDailyStockDto.cantidadInicial;
-      existingStock.cantidadDisponible = upsertDailyStockDto.cantidadInicial;
+    if (stock) {
+      stock.cantidad = cantidad;
+      await this.stockRepository.save(stock);
 
-      await this.stockRepository.save(existingStock);
-
-      return this.findByProductAndDate(product.id, fecha);
+      return this.findByProduct(product.id);
     }
 
-    const stock = this.stockRepository.create({
+    const newStock = this.stockRepository.create({
       product,
-      fecha,
-      cantidadInicial: upsertDailyStockDto.cantidadInicial,
-      cantidadDisponible: upsertDailyStockDto.cantidadInicial,
+      cantidad,
     });
 
-    const savedStock = await this.stockRepository.save(stock);
+    await this.stockRepository.save(newStock);
 
-    return this.findByProductAndDate(product.id, savedStock.fecha);
+    return this.findByProduct(product.id);
   }
 
   private async findProductById(id: number) {
@@ -132,13 +100,13 @@ export class StockService {
     return product;
   }
 
-  private normalizeDate(fecha: string) {
-    const normalizedDate = fecha.trim();
-
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(normalizedDate)) {
-      throw new BadRequestException('La fecha debe tener formato YYYY-MM-DD');
+  private normalizeQuantity(cantidad: number) {
+    if (!Number.isInteger(cantidad) || cantidad < 0) {
+      throw new BadRequestException(
+        'La cantidad de stock no puede ser negativa',
+      );
     }
 
-    return normalizedDate;
+    return cantidad;
   }
 }

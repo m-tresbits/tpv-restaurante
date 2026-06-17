@@ -139,3 +139,23 @@ FROM
     categorias c
 WHERE
     c.nombre = 'Ensaladas' ON CONFLICT (nombre) DO NOTHING;
+
+INSERT INTO
+    stock (producto_id, cantidad)
+SELECT
+    p.id,
+    20
+FROM
+    productos p
+WHERE
+    p.nombre = 'Burger' ON CONFLICT (producto_id) DO NOTHING;
+
+INSERT INTO
+    stock (producto_id, cantidad)
+SELECT
+    p.id,
+    13
+FROM
+    productos p
+WHERE
+    p.nombre = 'Burger vegetal' ON CONFLICT (producto_id) DO NOTHING;

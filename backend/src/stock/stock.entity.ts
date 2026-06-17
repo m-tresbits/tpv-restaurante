@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -10,19 +11,17 @@ import {
 
 import { Product } from '../products/product.entity';
 
-@Entity('stock_diario')
-export class DailyStock {
+@Entity('stock')
+@Index(['product'], { unique: true })
+export class ProductStock {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column({ type: 'date' })
-  fecha!: string;
+  @Column({ type: 'integer' })
+  cantidad!: number;
 
-  @Column({ name: 'cantidad_inicial', type: 'integer' })
-  cantidadInicial!: number;
-
-  @Column({ name: 'cantidad_disponible', type: 'integer' })
-  cantidadDisponible!: number;
+  @Column({ name: 'producto_id', type: 'integer' })
+  productoId!: number;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;

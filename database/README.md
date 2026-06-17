@@ -20,7 +20,7 @@ El modelo de datos se compone de las siguientes entidades principales:
 - `mesas`: representa las mesas del restaurante.
 - `pedidos`: almacena la cabecera de cada pedido.
 - `detalle_pedido`: almacena las líneas concretas de cada pedido.
-- `stock_diario`: controla la disponibilidad diaria de cada producto.
+- `stock`: controla el stock actual de cada producto, sin dependencia de fecha.
 
 ## Usuarios iniciales
 

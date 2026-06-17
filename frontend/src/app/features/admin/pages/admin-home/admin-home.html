@@ -43,7 +43,7 @@
         [class.admin-home__nav-button--active]="activeSection() === 'stock'"
         (click)="selectSection('stock')"
       >
-        Stock diario
+        Stock actual
       </button>
     </nav>
   </aside>
@@ -52,7 +52,7 @@
     <header class="admin-home__header">
       <div>
         <h1>Panel de administración</h1>
-        <p>Área destinada a la gestión de carta, mesas y stock diario del restaurante.</p>
+        <p>Área destinada a la gestión de carta, mesas y stock actual del restaurante.</p>
       </div>
 
       <button type="button" class="admin-home__refresh" (click)="reload()">Actualizar</button>
@@ -84,7 +84,7 @@
           </article>
 
           <article class="admin-home__card">
-            <span>Stock diario</span>
+            <span>Stock actual</span>
             <strong>{{ stock().length }}</strong>
             <small>registros configurados</small>
           </article>

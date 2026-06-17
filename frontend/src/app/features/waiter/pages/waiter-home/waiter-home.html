@@ -136,14 +136,18 @@
                       <button
                         type="button"
                         class="waiter-home__product"
-                        [disabled]="isSaving()"
+                        [class.waiter-home__product--unavailable]="!hasAvailableStock(product)"
+                        [disabled]="isSaving() || !hasAvailableStock(product)"
                         (click)="addProductToOrder(product)"
                       >
-                        <span>{{ product.nombre }}</span>
+                        <span>
+                          {{ product.nombre }}
+                          <small>{{ stockLabel(product) }}</small>
+                        </span>
                         <strong>{{ product.precio }} €</strong>
                       </button>
                     } @empty {
-                      <p class="waiter-home__empty">No hay productos disponibles.</p>
+                      <p class="waiter-home__empty">No hay productos activos en la carta.</p>
                     }
                   </div>
                 </section>

@@ -2,7 +2,7 @@
 
 Aplicación web TPV desarrollada como Trabajo de Fin de Grado Superior del ciclo Desarrollo de Aplicaciones Web (DAW).
 
-El proyecto tiene como objetivo desarrollar un sistema de gestión para restaurantes que permita administrar pedidos, mesas, cocina, carta y stock diario mediante una arquitectura cliente-servidor.
+El proyecto tiene como objetivo desarrollar un sistema de gestión para restaurantes que permita administrar pedidos, mesas, cocina, carta y stock actual mediante una arquitectura cliente-servidor.
 
 ## Tecnologías utilizadas
 

@@ -3,7 +3,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 
 import { StockApiService } from '../../../../core/api/services/stock-api.service';
 import { Product } from '../../../../shared/models/product.model';
-import { DailyStock, UpsertDailyStockRequest } from '../../../../shared/models/stock.model';
+import { ProductStock, UpdateStockRequest } from '../../../../shared/models/stock.model';
 
 @Component({
   selector: 'app-stock-panel',
@@ -13,7 +13,7 @@ import { DailyStock, UpsertDailyStockRequest } from '../../../../shared/models/s
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StockPanel {
-  readonly stock = input.required<DailyStock[]>();
+  readonly stock = input.required<ProductStock[]>();
   readonly products = input.required<Product[]>();
   readonly stockChanged = output<void>();
 
@@ -26,11 +26,7 @@ export class StockPanel {
     productoId: new FormControl<number | null>(null, {
       validators: [Validators.required],
     }),
-    fecha: new FormControl(this.getTodayDate(), {
-      nonNullable: true,
-      validators: [Validators.required],
-    }),
-    cantidadInicial: new FormControl(0, {
+    cantidad: new FormControl(0, {
       nonNullable: true,
       validators: [Validators.required, Validators.min(0)],
     }),
@@ -42,27 +38,25 @@ export class StockPanel {
       return;
     }
 
-    const request: UpsertDailyStockRequest = {
-      productoId: Number(this.stockForm.controls.productoId.value),
-      fecha: this.stockForm.controls.fecha.value,
-      cantidadInicial: this.stockForm.controls.cantidadInicial.value,
+    const productId = Number(this.stockForm.controls.productoId.value);
+    const request: UpdateStockRequest = {
+      cantidad: this.stockForm.controls.cantidad.value,
     };
 
     this.isSaving.set(true);
     this.errorMessage.set(null);
 
-    this.stockApiService.upsertDailyStock(request).subscribe({
+    this.stockApiService.update(productId, request).subscribe({
       next: () => {
         this.stockForm.reset({
           productoId: null,
-          fecha: this.getTodayDate(),
-          cantidadInicial: 0,
+          cantidad: 0,
         });
         this.isSaving.set(false);
         this.stockChanged.emit();
       },
       error: () => {
-        this.errorMessage.set('No se ha podido guardar el stock diario.');
+        this.errorMessage.set('No se ha podido guardar el stock actual.');
         this.isSaving.set(false);
       },
     });
@@ -72,19 +66,17 @@ export class StockPanel {
     return this.products().filter((product) => product.activo);
   }
 
-  protected stockStatus(stock: DailyStock): string {
-    if (stock.cantidadDisponible <= 0) {
+  protected productStock(product: Product): number {
+    return Number(
+      this.stock().find((stock) => Number(stock.product.id) === Number(product.id))?.cantidad ?? 0,
+    );
+  }
+
+  protected stockStatus(product: Product): string {
+    if (this.productStock(product) <= 0) {
       return 'Sin stock';
     }
 
-    if (stock.cantidadDisponible < stock.cantidadInicial) {
-      return 'Parcial';
-    }
-
     return 'Disponible';
-  }
-
-  private getTodayDate(): string {
-    return new Date().toISOString().slice(0, 10);
   }
 }

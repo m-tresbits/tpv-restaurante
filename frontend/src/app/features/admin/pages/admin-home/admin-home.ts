@@ -7,7 +7,7 @@ import { StockApiService } from '../../../../core/api/services/stock-api.service
 import { TablesApiService } from '../../../../core/api/services/tables-api.service';
 import { Category } from '../../../../shared/models/category.model';
 import { Product } from '../../../../shared/models/product.model';
-import { DailyStock } from '../../../../shared/models/stock.model';
+import { ProductStock } from '../../../../shared/models/stock.model';
 import { RestaurantTable } from '../../../../shared/models/table.model';
 import { CategoriesPanel } from '../../components/categories-panel/categories-panel';
 import { ProductsPanel } from '../../components/products-panel/products-panel';
@@ -34,7 +34,7 @@ export class AdminHome implements OnInit {
   protected readonly categories = signal<Category[]>([]);
   protected readonly products = signal<Product[]>([]);
   protected readonly tables = signal<RestaurantTable[]>([]);
-  protected readonly stock = signal<DailyStock[]>([]);
+  protected readonly stock = signal<ProductStock[]>([]);
 
   protected readonly isLoading = signal(false);
   protected readonly errorMessage = signal<string | null>(null);

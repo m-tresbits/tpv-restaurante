@@ -1,11 +1,14 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { forkJoin } from 'rxjs';
 
 import { OrdersApiService } from '../../../../core/api/services/orders-api.service';
 import { ProductsApiService } from '../../../../core/api/services/products-api.service';
+import { StockApiService } from '../../../../core/api/services/stock-api.service';
 import { TablesApiService } from '../../../../core/api/services/tables-api.service';
 import { Order, OrderDetail } from '../../../../shared/models/order.model';
 import { Product } from '../../../../shared/models/product.model';
+import { ProductStock } from '../../../../shared/models/stock.model';
 import { RestaurantTable, TableStatus } from '../../../../shared/models/table.model';
 
 @Component({
@@ -17,10 +20,12 @@ import { RestaurantTable, TableStatus } from '../../../../shared/models/table.mo
 export class WaiterHome implements OnInit {
   private readonly tablesApiService = inject(TablesApiService);
   private readonly productsApiService = inject(ProductsApiService);
+  private readonly stockApiService = inject(StockApiService);
   private readonly ordersApiService = inject(OrdersApiService);
 
   protected readonly tables = signal<RestaurantTable[]>([]);
   protected readonly products = signal<Product[]>([]);
+  protected readonly stock = signal<ProductStock[]>([]);
   protected readonly openOrders = signal<Order[]>([]);
   protected readonly selectedTable = signal<RestaurantTable | null>(null);
   protected readonly activeOrder = signal<Order | null>(null);
@@ -38,8 +43,10 @@ export class WaiterHome implements OnInit {
   }
 
   protected selectTable(table: RestaurantTable): void {
+    const order = this.findOpenOrderByTable(table.id);
+
     this.selectedTable.set(table);
-    this.activeOrder.set(this.findOpenOrderByTable(table.id));
+    this.activeOrder.set(order);
   }
 
   protected tableStatusLabel(status: TableStatus): string {
@@ -83,6 +90,28 @@ export class WaiterHome implements OnInit {
 
   protected orderDetails(order: Order): OrderDetail[] {
     return order.details ?? [];
+  }
+
+  protected availableStock(product: Product): number {
+    return Number(this.findStockByProduct(product)?.cantidad ?? 0);
+  }
+
+  protected hasAvailableStock(product: Product): boolean {
+    return this.availableStock(product) > 0;
+  }
+
+  protected stockLabel(product: Product): string {
+    const stock = this.findStockByProduct(product);
+
+    if (!stock) {
+      return 'Sin stock configurado';
+    }
+
+    if (stock.cantidad <= 0) {
+      return 'Sin stock disponible';
+    }
+
+    return `Stock: ${stock.cantidad}`;
   }
 
   protected occupyTable(table: RestaurantTable): void {
@@ -149,6 +178,11 @@ export class WaiterHome implements OnInit {
       return;
     }
 
+    if (!this.hasAvailableStock(product)) {
+      this.errorMessage.set(this.stockLabel(product));
+      return;
+    }
+
     this.isSaving.set(true);
     this.errorMessage.set(null);
 
@@ -163,10 +197,13 @@ export class WaiterHome implements OnInit {
           this.activeOrder.set(updatedOrder);
           this.replaceTable(updatedOrder.table);
           this.selectedTable.set(updatedOrder.table);
+          this.decreaseProductStock(product.id);
           this.isSaving.set(false);
         },
-        error: () => {
-          this.errorMessage.set('No se ha podido añadir el producto al pedido.');
+        error: (error: unknown) => {
+          this.errorMessage.set(
+            this.getApiErrorMessage(error, 'No se ha podido añadir el producto al pedido.'),
+          );
           this.isSaving.set(false);
         },
       });
@@ -190,8 +227,10 @@ export class WaiterHome implements OnInit {
         this.selectedTable.set(updatedOrder.table);
         this.isSaving.set(false);
       },
-      error: () => {
-        this.errorMessage.set('No se ha podido enviar el pedido a cocina.');
+      error: (error: unknown) => {
+        this.errorMessage.set(
+          this.getApiErrorMessage(error, 'No se ha podido enviar el pedido a cocina.'),
+        );
         this.isSaving.set(false);
       },
     });
@@ -211,8 +250,8 @@ export class WaiterHome implements OnInit {
       next: (updatedOrder) => {
         this.finishOrder(updatedOrder);
       },
-      error: () => {
-        this.errorMessage.set('No se ha podido cerrar el pedido.');
+      error: (error: unknown) => {
+        this.errorMessage.set(this.getApiErrorMessage(error, 'No se ha podido cerrar el pedido.'));
         this.isSaving.set(false);
       },
     });
@@ -232,8 +271,10 @@ export class WaiterHome implements OnInit {
       next: (updatedOrder) => {
         this.finishOrder(updatedOrder);
       },
-      error: () => {
-        this.errorMessage.set('No se ha podido cancelar el pedido.');
+      error: (error: unknown) => {
+        this.errorMessage.set(
+          this.getApiErrorMessage(error, 'No se ha podido cancelar el pedido.'),
+        );
         this.isSaving.set(false);
       },
     });
@@ -248,8 +289,13 @@ export class WaiterHome implements OnInit {
         this.selectedTable.set(order.table);
         this.isSaving.set(false);
       },
-      error: () => {
-        this.errorMessage.set('No se ha podido crear el pedido para la mesa seleccionada.');
+      error: (error: unknown) => {
+        this.errorMessage.set(
+          this.getApiErrorMessage(
+            error,
+            'No se ha podido crear el pedido para la mesa seleccionada.',
+          ),
+        );
         this.isSaving.set(false);
       },
     });
@@ -262,18 +308,22 @@ export class WaiterHome implements OnInit {
     forkJoin({
       tables: this.tablesApiService.findActive(),
       products: this.productsApiService.findAvailable(),
+      stock: this.stockApiService.findAll(),
       openOrders: this.ordersApiService.findOpen(),
     }).subscribe({
-      next: ({ tables, products, openOrders }) => {
+      next: ({ tables, products, stock, openOrders }) => {
         this.openOrders.set(openOrders);
         this.tables.set(this.reconcileTablesWithOpenOrders(tables, openOrders));
         this.products.set(products);
+        this.stock.set(stock);
         this.syncSelectedTable(this.tables());
         this.syncActiveOrder(openOrders);
         this.isLoading.set(false);
       },
-      error: () => {
-        this.errorMessage.set('No se han podido cargar los datos del camarero.');
+      error: (error: unknown) => {
+        this.errorMessage.set(
+          this.getApiErrorMessage(error, 'No se han podido cargar los datos del camarero.'),
+        );
         this.isLoading.set(false);
       },
     });
@@ -293,8 +343,10 @@ export class WaiterHome implements OnInit {
         this.selectedTable.set(updatedTable);
         this.isSaving.set(false);
       },
-      error: () => {
-        this.errorMessage.set('No se ha podido actualizar el estado de la mesa.');
+      error: (error: unknown) => {
+        this.errorMessage.set(
+          this.getApiErrorMessage(error, 'No se ha podido actualizar el estado de la mesa.'),
+        );
         this.isSaving.set(false);
       },
     });
@@ -329,6 +381,25 @@ export class WaiterHome implements OnInit {
     });
   }
 
+  private decreaseProductStock(productId: number): void {
+    this.stock.update((currentStock) =>
+      currentStock.map((stock) => {
+        if (stock.product.id !== productId) {
+          return stock;
+        }
+
+        return {
+          ...stock,
+          cantidad: Math.max(stock.cantidad - 1, 0),
+        };
+      }),
+    );
+  }
+
+  private findStockByProduct(product: Product): ProductStock | null {
+    return this.stock().find((stock) => Number(stock.product?.id) === Number(product.id)) ?? null;
+  }
+
   private findOpenOrderByTable(tableId: number): Order | null {
     return this.openOrders().find((order) => order.table.id === tableId) ?? null;
   }
@@ -359,7 +430,27 @@ export class WaiterHome implements OnInit {
       return;
     }
 
-    this.activeOrder.set(openOrders.find((order) => order.table.id === selectedTable.id) ?? null);
+    const order = openOrders.find((openOrder) => openOrder.table.id === selectedTable.id) ?? null;
+
+    this.activeOrder.set(order);
+  }
+
+  private getApiErrorMessage(error: unknown, fallback: string): string {
+    if (!(error instanceof HttpErrorResponse)) {
+      return fallback;
+    }
+
+    const responseMessage = error.error?.message;
+
+    if (Array.isArray(responseMessage)) {
+      return responseMessage.join(' ');
+    }
+
+    if (typeof responseMessage === 'string' && responseMessage.trim()) {
+      return responseMessage;
+    }
+
+    return fallback;
   }
 
   private syncSelectedTable(tables: RestaurantTable[]): void {

@@ -7,7 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, Repository } from 'typeorm';
 
 import { Product } from '../products/product.entity';
-import { DailyStock } from '../stock/stock.entity';
+import { ProductStock } from '../stock/stock.entity';
 import { RestaurantTable } from '../tables/table.entity';
 import { User } from '../users/user.entity';
 import { AddOrderItemDto } from './dto/add-order-item.dto';
@@ -133,19 +133,15 @@ export class OrdersService {
     }
 
     const quantity = this.normalizeQuantity(addOrderItemDto.cantidad);
-    const stockDate = this.getStockDateFromOrder(order);
 
     await this.dataSource.transaction(async (manager) => {
-      const stockRepository = manager.getRepository(DailyStock);
+      const stockRepository = manager.getRepository(ProductStock);
       const orderDetailsRepository = manager.getRepository(OrderDetail);
       const ordersRepository = manager.getRepository(Order);
 
       const stock = await stockRepository.findOne({
         where: {
-          product: {
-            id: product.id,
-          },
-          fecha: stockDate,
+          productoId: product.id,
         },
         lock: {
           mode: 'pessimistic_write',
@@ -154,22 +150,26 @@ export class OrdersService {
 
       if (!stock) {
         throw new BadRequestException(
-          'No hay stock diario configurado para este producto',
+          'No hay stock configurado para este producto',
         );
       }
 
-      if (stock.cantidadDisponible < quantity) {
+      if (stock.cantidad < quantity) {
         throw new BadRequestException(
           'No hay stock suficiente para este producto',
         );
       }
 
-      stock.cantidadDisponible -= quantity;
+      stock.cantidad -= quantity;
       await stockRepository.save(stock);
 
       const detail = orderDetailsRepository.create({
-        order,
-        product,
+        order: {
+          id: order.id,
+        } as Order,
+        product: {
+          id: product.id,
+        } as Product,
         cantidad: quantity,
         precioUnitario: product.precio,
         estado: 'PENDIENTE',
@@ -188,8 +188,11 @@ export class OrdersService {
         },
       });
 
-      order.total = this.calculateTotal(details);
-      await ordersRepository.save(order);
+      const total = this.calculateTotal(details);
+
+      await ordersRepository.update(order.id, {
+        total,
+      });
     });
 
     return this.findOne(order.id);
@@ -291,10 +294,8 @@ export class OrdersService {
       throw new BadRequestException('El pedido ya está cerrado o cancelado');
     }
 
-    const stockDate = this.getStockDateFromOrder(order);
-
     await this.dataSource.transaction(async (manager) => {
-      const stockRepository = manager.getRepository(DailyStock);
+      const stockRepository = manager.getRepository(ProductStock);
       const orderDetailsRepository = manager.getRepository(OrderDetail);
       const ordersRepository = manager.getRepository(Order);
       const tablesRepository = manager.getRepository(RestaurantTable);
@@ -319,10 +320,7 @@ export class OrdersService {
         if (detail.estado !== 'CANCELADO') {
           const stock = await stockRepository.findOne({
             where: {
-              product: {
-                id: detail.product.id,
-              },
-              fecha: stockDate,
+              productoId: detail.product.id,
             },
             lock: {
               mode: 'pessimistic_write',
@@ -330,11 +328,7 @@ export class OrdersService {
           });
 
           if (stock) {
-            stock.cantidadDisponible += detail.cantidad;
-
-            if (stock.cantidadDisponible > stock.cantidadInicial) {
-              stock.cantidadDisponible = stock.cantidadInicial;
-            }
+            stock.cantidad += detail.cantidad;
 
             await stockRepository.save(stock);
           }
@@ -349,15 +343,6 @@ export class OrdersService {
     });
 
     return this.findOne(order.id);
-  }
-
-  private async updateTotal(orderId: number) {
-    const order = await this.findOne(orderId);
-    const details = await this.findDetailsByOrderId(order.id);
-
-    order.total = this.calculateTotal(details);
-
-    await this.ordersRepository.save(order);
   }
 
   private async findTableById(id: number) {
@@ -416,10 +401,6 @@ export class OrdersService {
         product: true,
       },
     });
-  }
-
-  private getStockDateFromOrder(order: Order): string {
-    return order.fechaCreacion.toISOString().slice(0, 10);
   }
 
   private calculateTotal(details: OrderDetail[]): string {

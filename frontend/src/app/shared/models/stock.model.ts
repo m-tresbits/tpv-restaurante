@@ -1,17 +1,13 @@
 import { Product } from './product.model';
 
-export type DailyStock = {
+export type ProductStock = {
   id: number;
   product: Product;
-  fecha: string;
-  cantidadInicial: number;
-  cantidadDisponible: number;
+  cantidad: number;
   createdAt: string;
   updatedAt: string;
 };
 
-export type UpsertDailyStockRequest = {
-  productoId: number;
-  fecha: string;
-  cantidadInicial: number;
+export type UpdateStockRequest = {
+  cantidad: number;
 };

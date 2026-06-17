@@ -1,8 +1,8 @@
 <section class="stock-panel">
   <header class="stock-panel__header">
     <div>
-      <h2>Stock diario</h2>
-      <p>Configuración de la disponibilidad diaria de productos de la carta.</p>
+      <h2>Stock actual</h2>
+      <p>Configuración del stock actual de productos de la carta.</p>
     </div>
   </header>
 
@@ -22,22 +22,15 @@
       </label>
 
       <label>
-        Fecha
-        <input type="date" formControlName="fecha" />
-      </label>
-
-      <label>
-        Cantidad inicial
-        <input type="number" min="0" formControlName="cantidadInicial" />
+        Stock actual
+        <input type="number" min="0" formControlName="cantidad" />
       </label>
 
       <button type="submit" [disabled]="isSaving()">Guardar stock</button>
     </div>
 
     @if (stockForm.invalid && stockForm.touched) {
-      <p class="stock-panel__validation">
-        Selecciona un producto, una fecha y una cantidad válida.
-      </p>
+      <p class="stock-panel__validation">Selecciona un producto y una cantidad válida.</p>
     }
   </form>
 
@@ -46,31 +39,22 @@
   }
 
   <div class="stock-panel__list">
-    @for (stockItem of stock(); track stockItem.id) {
+    @for (product of activeProducts(); track product.id) {
       <article class="stock-panel__item">
         <div>
-          <strong>{{ stockItem.product.nombre }}</strong>
-          <span>{{ stockItem.fecha }}</span>
-        </div>
-
-        <div class="stock-panel__quantities">
-          <span>Inicial: {{ stockItem.cantidadInicial }}</span>
-          <span>Disponible: {{ stockItem.cantidadDisponible }}</span>
+          <strong>{{ product.nombre }}</strong>
+          <span>{{ product.category.nombre }}</span>
         </div>
 
         <small
           class="stock-panel__badge"
-          [class.stock-panel__badge--empty]="stockItem.cantidadDisponible <= 0"
-          [class.stock-panel__badge--partial]="
-            stockItem.cantidadDisponible > 0 &&
-            stockItem.cantidadDisponible < stockItem.cantidadInicial
-          "
+          [class.stock-panel__badge--empty]="productStock(product) <= 0"
         >
-          {{ stockStatus(stockItem) }}
+          {{ stockStatus(product) }}: {{ productStock(product) }}
         </small>
       </article>
     } @empty {
-      <p class="stock-panel__empty">No hay stock diario configurado.</p>
+      <p class="stock-panel__empty">No hay productos activos para gestionar stock.</p>
     }
   </div>
 </section>

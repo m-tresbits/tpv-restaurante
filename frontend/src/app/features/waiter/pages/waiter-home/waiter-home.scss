@@ -312,10 +312,26 @@
   cursor: pointer;
 }
 
-.waiter-home__product span,
+.waiter-home__product--unavailable {
+  border-style: dashed;
+}
+
 .waiter-home__line strong {
   color: var(--color-text);
   font-weight: 700;
+}
+
+.waiter-home__product span {
+  display: grid;
+  gap: 0.15rem;
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.waiter-home__product small {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 
 .waiter-home__line {

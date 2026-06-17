@@ -95,15 +95,13 @@ CREATE TABLE
     );
 
 CREATE TABLE
-    IF NOT EXISTS stock_diario (
+    IF NOT EXISTS stock (
         id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
         producto_id INTEGER NOT NULL REFERENCES productos (id),
-        fecha DATE NOT NULL,
-        cantidad_inicial INTEGER NOT NULL CHECK (cantidad_inicial >= 0),
-        cantidad_disponible INTEGER NOT NULL CHECK (cantidad_disponible >= 0),
+        cantidad INTEGER NOT NULL CHECK (cantidad >= 0),
         created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE (producto_id, fecha)
+        UNIQUE (producto_id)
     );
 
 COMMIT;

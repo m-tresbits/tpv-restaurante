@@ -168,11 +168,19 @@ export class KitchenHome {
       return 'meat';
     }
 
-    if (text.includes('entrante') || text.includes('tapa') || text.includes('racion')) {
+    if (
+      text.includes('entrante') ||
+      text.includes('tapa') ||
+      text.includes('racion') ||
+      text.includes('ración') ||
+      text.includes('patata') ||
+      text.includes('guarnicion') ||
+      text.includes('guarnición')
+    ) {
       return 'starter';
     }
 
-    if (text.includes('ensalada')) {
+    if (text.includes('ensalada') || text.includes('vegetal') || text.includes('verdura')) {
       return 'salad';
     }
 

@@ -114,13 +114,13 @@
 }
 
 .tables-panel__item--occupied {
-  border-color: #fde68a;
-  background: #fffbeb;
+  border-color: #fecaca;
+  background: #fef2f2;
 }
 
 .tables-panel__item--reserved {
-  border-color: #bfdbfe;
-  background: #eff6ff;
+  border-color: #fde68a;
+  background: #fffbeb;
 }
 
 .tables-panel__item--inactive {
@@ -153,6 +153,17 @@
 .tables-panel__status {
   min-width: 8rem;
   font-size: var(--font-size-sm);
+}
+
+.tables-panel__status-value {
+  width: fit-content;
+  padding: 0.15rem var(--space-2);
+  border: 1px solid rgb(15 23 42 / 10%);
+  border-radius: var(--radius-full);
+  background: rgb(255 255 255 / 68%);
+  color: var(--color-text);
+  font-size: 0.75rem;
+  font-weight: 800;
 }
 
 .tables-panel__actions {

@@ -57,6 +57,8 @@
             @for (detail of getKitchenDetails(order); track detail.id) {
               <div
                 class="kitchen-home__detail"
+                [class.kitchen-home__detail--pending]="detail.estado === 'PENDIENTE'"
+                [class.kitchen-home__detail--preparing]="detail.estado === 'EN_PREPARACION'"
                 [class.kitchen-home__detail--ready]="detail.estado === 'LISTO'"
                 [class.kitchen-home__detail--burger]="getDetailTone(detail.product.nombre, detail.product.category?.nombre ?? '') === 'burger'"
                 [class.kitchen-home__detail--pizza]="getDetailTone(detail.product.nombre, detail.product.category?.nombre ?? '') === 'pizza'"

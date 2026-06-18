@@ -73,13 +73,14 @@
 
             <label class="tables-panel__status">
               Estado
+              <span class="tables-panel__status-value">{{ table.estado }}</span>
               <select
                 [value]="table.estado"
                 [disabled]="isSaving()"
                 (change)="updateStatusFromEvent(table.id, $event)"
               >
                 @for (status of statuses; track status) {
-                  <option [value]="status">
+                  <option [value]="status" [selected]="status === table.estado">
                     {{ status }}
                   </option>
                 }

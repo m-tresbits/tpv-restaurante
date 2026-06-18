@@ -12,14 +12,14 @@ export class AuthSessionService {
   readonly currentUser = signal<AuthUser | null>(this.getStoredUser());
 
   saveSession(response: LoginResponse): void {
-    localStorage.setItem(this.tokenKey, response.accessToken);
-    localStorage.setItem(this.userKey, JSON.stringify(response.usuario));
+    sessionStorage.setItem(this.tokenKey, response.accessToken);
+    sessionStorage.setItem(this.userKey, JSON.stringify(response.usuario));
 
     this.currentUser.set(response.usuario);
   }
 
   getToken(): string | null {
-    return localStorage.getItem(this.tokenKey);
+    return sessionStorage.getItem(this.tokenKey);
   }
 
   getUser(): AuthUser | null {
@@ -35,14 +35,14 @@ export class AuthSessionService {
   }
 
   clearSession(): void {
-    localStorage.removeItem(this.tokenKey);
-    localStorage.removeItem(this.userKey);
+    sessionStorage.removeItem(this.tokenKey);
+    sessionStorage.removeItem(this.userKey);
 
     this.currentUser.set(null);
   }
 
   private getStoredUser(): AuthUser | null {
-    const storedUser = localStorage.getItem(this.userKey);
+    const storedUser = sessionStorage.getItem(this.userKey);
 
     if (!storedUser) {
       return null;
@@ -51,7 +51,7 @@ export class AuthSessionService {
     try {
       return JSON.parse(storedUser) as AuthUser;
     } catch {
-      localStorage.removeItem(this.userKey);
+      sessionStorage.removeItem(this.userKey);
       return null;
     }
   }

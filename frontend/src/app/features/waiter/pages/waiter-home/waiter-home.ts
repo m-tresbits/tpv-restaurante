@@ -24,7 +24,7 @@ export class WaiterHome implements OnInit {
   private readonly ordersApiService = inject(OrdersApiService);
   private readonly destroyRef = inject(DestroyRef);
 
-  private isRefreshingMenuStock = false;
+  private isRefreshingWaiterData = false;
 
   protected readonly tables = signal<RestaurantTable[]>([]);
   protected readonly products = signal<Product[]>([]);
@@ -40,7 +40,7 @@ export class WaiterHome implements OnInit {
   protected readonly errorMessage = signal<string | null>(null);
 
   constructor() {
-    const timerId = window.setInterval(() => this.refreshMenuStock(), 5_000);
+    const timerId = window.setInterval(() => this.refreshWaiterData(), 5_000);
     this.destroyRef.onDestroy(() => window.clearInterval(timerId));
   }
 
@@ -307,7 +307,7 @@ export class WaiterHome implements OnInit {
 
     if (!this.hasAvailableStock(product)) {
       this.errorMessage.set(this.stockLabel(product));
-      this.refreshMenuStock(false, true);
+      this.refreshWaiterData(false, true);
       return;
     }
 
@@ -338,7 +338,7 @@ export class WaiterHome implements OnInit {
           this.isSaving.set(false);
 
           if (this.isStockInsufficientMessage(message)) {
-            this.refreshMenuStock(false, true);
+            this.refreshWaiterData(false, true);
           }
         },
       });
@@ -563,33 +563,38 @@ export class WaiterHome implements OnInit {
     });
   }
 
-  private refreshMenuStock(showError = false, ignoreSaving = false): void {
-    if ((!ignoreSaving && this.isSaving()) || this.isRefreshingMenuStock) {
+  private refreshWaiterData(showError = false, ignoreSaving = false): void {
+    if ((!ignoreSaving && this.isSaving()) || this.isRefreshingWaiterData) {
       return;
     }
 
-    this.isRefreshingMenuStock = true;
+    this.isRefreshingWaiterData = true;
 
     forkJoin({
       products: this.productsApiService.findAvailable(),
       stock: this.stockApiService.findAll(),
+      openOrders: this.ordersApiService.findOpen(),
     }).subscribe({
-      next: ({ products, stock }) => {
+      next: ({ products, stock, openOrders }) => {
         if (ignoreSaving || !this.isSaving()) {
           this.products.set(products);
           this.stock.set(stock);
+          this.openOrders.set(openOrders);
+          this.tables.update((tables) => this.reconcileTablesWithOpenOrders(tables, openOrders));
+          this.syncSelectedTable(this.tables());
+          this.syncActiveOrderFromPolling(openOrders);
         }
 
-        this.isRefreshingMenuStock = false;
+        this.isRefreshingWaiterData = false;
       },
       error: (error: unknown) => {
         if (showError) {
           this.errorMessage.set(
-            this.getApiErrorMessage(error, 'No se ha podido actualizar el stock de la carta.'),
+            this.getApiErrorMessage(error, 'No se han podido actualizar los datos del camarero.'),
           );
         }
 
-        this.isRefreshingMenuStock = false;
+        this.isRefreshingWaiterData = false;
       },
     });
   }
@@ -740,6 +745,27 @@ export class WaiterHome implements OnInit {
 
     if (!order || !this.canAddProducts(order)) {
       this.isMenuVisible.set(false);
+    }
+  }
+
+  private syncActiveOrderFromPolling(openOrders: Order[]): void {
+    const activeOrder = this.activeOrder();
+    const selectedTable = this.selectedTable();
+
+    if (!activeOrder && !selectedTable) {
+      return;
+    }
+
+    const updatedOrder = activeOrder
+      ? openOrders.find((openOrder) => openOrder.id === activeOrder.id)
+      : openOrders.find((openOrder) => openOrder.table.id === selectedTable?.id);
+
+    if (updatedOrder) {
+      this.activeOrder.set(updatedOrder);
+
+      if (!this.canAddProducts(updatedOrder)) {
+        this.isMenuVisible.set(false);
+      }
     }
   }
 

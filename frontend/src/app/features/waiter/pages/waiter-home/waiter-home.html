@@ -138,6 +138,18 @@
                 <section class="waiter-home__products">
                   <h4>{{ productsSectionTitle(order) }}</h4>
 
+                  <label class="waiter-home__observation">
+                    <span>Observación para el próximo producto</span>
+                    <textarea
+                      maxlength="255"
+                      rows="2"
+                      placeholder="Ej.: sin cebolla, poco hecho, sin salsa"
+                      [disabled]="isSaving()"
+                      [value]="nextProductObservation()"
+                      (input)="updateNextProductObservation($any($event.target).value)"
+                    ></textarea>
+                  </label>
+
                   <div class="waiter-home__product-list">
                     @for (product of products(); track product.id) {
                       <button
@@ -182,24 +194,7 @@
                       <span>{{ getLineSubtotal(detail) }}</span>
 
                       @if (canEditOrder(order)) {
-                        <div class="waiter-home__line-actions" aria-label="Editar cantidad">
-                          <button
-                            type="button"
-                            class="waiter-home__quantity-action"
-                            [disabled]="isSaving()"
-                            (click)="decreaseDetailQuantity(detail)"
-                          >
-                            -
-                          </button>
-                          <span>{{ detail.cantidad }}</span>
-                          <button
-                            type="button"
-                            class="waiter-home__quantity-action"
-                            [disabled]="isSaving() || !hasAvailableStock(detail.product)"
-                            (click)="increaseDetailQuantity(detail)"
-                          >
-                            +
-                          </button>
+                        <div class="waiter-home__line-actions" aria-label="Editar línea">
                           <button
                             type="button"
                             class="waiter-home__remove-line"

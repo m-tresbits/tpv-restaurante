@@ -34,6 +34,7 @@ export class WaiterHome implements OnInit {
   protected readonly activeOrder = signal<Order | null>(null);
   protected readonly acknowledgedReadyDetailIds = signal<Set<number>>(new Set());
   protected readonly isMenuVisible = signal(false);
+  protected readonly nextProductObservation = signal('');
 
   protected readonly isLoading = signal(false);
   protected readonly isSaving = signal(false);
@@ -314,10 +315,13 @@ export class WaiterHome implements OnInit {
     this.isSaving.set(true);
     this.errorMessage.set(null);
 
+    const observation = this.nextProductObservation().trim();
+
     this.ordersApiService
       .addItem(order.id, {
         productoId: product.id,
         cantidad: 1,
+        ...(observation ? { observaciones: observation } : {}),
       })
       .subscribe({
         next: (updatedOrder) => {
@@ -326,6 +330,7 @@ export class WaiterHome implements OnInit {
           this.replaceTable(updatedOrder.table);
           this.selectedTable.set(updatedOrder.table);
           this.decreaseProductStock(product.id);
+          this.nextProductObservation.set('');
           this.isSaving.set(false);
         },
         error: (error: unknown) => {
@@ -344,17 +349,8 @@ export class WaiterHome implements OnInit {
       });
   }
 
-  protected increaseDetailQuantity(detail: OrderDetail): void {
-    this.updateDetailQuantity(detail, detail.cantidad + 1);
-  }
-
-  protected decreaseDetailQuantity(detail: OrderDetail): void {
-    if (detail.cantidad <= 1) {
-      this.removeDetail(detail);
-      return;
-    }
-
-    this.updateDetailQuantity(detail, detail.cantidad - 1);
+  protected updateNextProductObservation(value: string): void {
+    this.nextProductObservation.set(value);
   }
 
   protected removeDetail(detail: OrderDetail): void {
@@ -504,31 +500,6 @@ export class WaiterHome implements OnInit {
             error,
             'No se ha podido crear el pedido para la mesa seleccionada.',
           ),
-        );
-        this.isSaving.set(false);
-      },
-    });
-  }
-
-  private updateDetailQuantity(detail: OrderDetail, quantity: number): void {
-    const order = this.activeOrder();
-
-    if (!order || !this.canEditOrder(order) || this.isSaving()) {
-      return;
-    }
-
-    this.isSaving.set(true);
-    this.errorMessage.set(null);
-
-    this.ordersApiService.updateItemQuantity(order.id, detail.id, { cantidad: quantity }).subscribe({
-      next: (updatedOrder) => {
-        this.syncUpdatedOrder(updatedOrder);
-        this.adjustProductStock(detail.product.id, detail.cantidad - quantity);
-        this.isSaving.set(false);
-      },
-      error: (error: unknown) => {
-        this.errorMessage.set(
-          this.getApiErrorMessage(error, 'No se ha podido actualizar la cantidad.'),
         );
         this.isSaving.set(false);
       },

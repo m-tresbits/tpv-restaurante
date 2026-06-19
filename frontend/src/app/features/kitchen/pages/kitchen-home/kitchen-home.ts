@@ -13,6 +13,8 @@ export class KitchenHome {
   private readonly ordersApiService = inject(OrdersApiService);
   private readonly destroyRef = inject(DestroyRef);
 
+  private isRefreshingOrders = false;
+
   protected readonly orders = signal<Order[]>([]);
   protected readonly isLoading = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
@@ -33,21 +35,49 @@ export class KitchenHome {
     this.loadOrders();
 
     const timerId = window.setInterval(() => this.now.set(Date.now()), 1_000);
+    const ordersTimerId = window.setInterval(() => this.refreshOrders(), 5_000);
+
     this.destroyRef.onDestroy(() => window.clearInterval(timerId));
+    this.destroyRef.onDestroy(() => window.clearInterval(ordersTimerId));
   }
 
   protected loadOrders(): void {
-    this.isLoading.set(true);
+    this.refreshOrders(true);
+  }
+
+  private refreshOrders(showLoading = false): void {
+    if (this.updatingDetailId() !== null || this.isRefreshingOrders) {
+      return;
+    }
+
+    this.isRefreshingOrders = true;
+
+    if (showLoading) {
+      this.isLoading.set(true);
+    }
+
     this.errorMessage.set(null);
 
     this.ordersApiService.findOpen().subscribe({
       next: (orders) => {
-        this.orders.set(orders);
-        this.isLoading.set(false);
+        if (this.updatingDetailId() === null) {
+          this.orders.set(orders);
+        }
+
+        if (showLoading) {
+          this.isLoading.set(false);
+        }
+
+        this.isRefreshingOrders = false;
       },
       error: () => {
         this.errorMessage.set('No se han podido cargar las comandas de cocina.');
-        this.isLoading.set(false);
+
+        if (showLoading) {
+          this.isLoading.set(false);
+        }
+
+        this.isRefreshingOrders = false;
       },
     });
   }

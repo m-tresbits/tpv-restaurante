@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { forkJoin } from 'rxjs';
 
 import { OrdersApiService } from '../../../../core/api/services/orders-api.service';
@@ -22,6 +22,9 @@ export class WaiterHome implements OnInit {
   private readonly productsApiService = inject(ProductsApiService);
   private readonly stockApiService = inject(StockApiService);
   private readonly ordersApiService = inject(OrdersApiService);
+  private readonly destroyRef = inject(DestroyRef);
+
+  private isRefreshingMenuStock = false;
 
   protected readonly tables = signal<RestaurantTable[]>([]);
   protected readonly products = signal<Product[]>([]);
@@ -35,6 +38,11 @@ export class WaiterHome implements OnInit {
   protected readonly isLoading = signal(false);
   protected readonly isSaving = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
+
+  constructor() {
+    const timerId = window.setInterval(() => this.refreshMenuStock(), 5_000);
+    this.destroyRef.onDestroy(() => window.clearInterval(timerId));
+  }
 
   ngOnInit(): void {
     this.loadInitialData();
@@ -299,6 +307,7 @@ export class WaiterHome implements OnInit {
 
     if (!this.hasAvailableStock(product)) {
       this.errorMessage.set(this.stockLabel(product));
+      this.refreshMenuStock(false, true);
       return;
     }
 
@@ -320,10 +329,17 @@ export class WaiterHome implements OnInit {
           this.isSaving.set(false);
         },
         error: (error: unknown) => {
-          this.errorMessage.set(
-            this.getApiErrorMessage(error, 'No se ha podido añadir el producto al pedido.'),
+          const message = this.getApiErrorMessage(
+            error,
+            'No se ha podido añadir el producto al pedido.',
           );
+
+          this.errorMessage.set(message);
           this.isSaving.set(false);
+
+          if (this.isStockInsufficientMessage(message)) {
+            this.refreshMenuStock(false, true);
+          }
         },
       });
   }
@@ -547,6 +563,37 @@ export class WaiterHome implements OnInit {
     });
   }
 
+  private refreshMenuStock(showError = false, ignoreSaving = false): void {
+    if ((!ignoreSaving && this.isSaving()) || this.isRefreshingMenuStock) {
+      return;
+    }
+
+    this.isRefreshingMenuStock = true;
+
+    forkJoin({
+      products: this.productsApiService.findAvailable(),
+      stock: this.stockApiService.findAll(),
+    }).subscribe({
+      next: ({ products, stock }) => {
+        if (ignoreSaving || !this.isSaving()) {
+          this.products.set(products);
+          this.stock.set(stock);
+        }
+
+        this.isRefreshingMenuStock = false;
+      },
+      error: (error: unknown) => {
+        if (showError) {
+          this.errorMessage.set(
+            this.getApiErrorMessage(error, 'No se ha podido actualizar el stock de la carta.'),
+          );
+        }
+
+        this.isRefreshingMenuStock = false;
+      },
+    });
+  }
+
   private updateTableStatus(tableId: number, estado: TableStatus): void {
     if (this.isSaving()) {
       return;
@@ -712,6 +759,10 @@ export class WaiterHome implements OnInit {
     }
 
     return fallback;
+  }
+
+  private isStockInsufficientMessage(message: string): boolean {
+    return message.toLocaleLowerCase().includes('stock');
   }
 
   private syncSelectedTable(tables: RestaurantTable[]): void {

@@ -12,9 +12,11 @@
 
   @if (isLoading()) {
     <p class="waiter-home__status">Cargando datos...</p>
-  } @else if (errorMessage()) {
-    <p class="waiter-home__error">{{ errorMessage() }}</p>
   } @else {
+    @if (errorMessage()) {
+      <p class="waiter-home__error" role="alert">{{ errorMessage() }}</p>
+    }
+
     <section class="waiter-home__content">
       <div class="waiter-home__tables">
         @for (table of tables(); track table.id) {

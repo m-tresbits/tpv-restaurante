@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { forkJoin } from 'rxjs';
 
 import { CategoriesApiService } from '../../../../core/api/services/categories-api.service';
@@ -29,6 +29,9 @@ export class AdminHome implements OnInit {
   private readonly productsApiService = inject(ProductsApiService);
   private readonly tablesApiService = inject(TablesApiService);
   private readonly stockApiService = inject(StockApiService);
+  private readonly destroyRef = inject(DestroyRef);
+
+  private isRefreshingTables = false;
 
   protected readonly activeSection = signal<AdminSection>('dashboard');
 
@@ -39,6 +42,11 @@ export class AdminHome implements OnInit {
 
   protected readonly isLoading = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
+
+  constructor() {
+    const timerId = window.setInterval(() => this.refreshTables(), 5_000);
+    this.destroyRef.onDestroy(() => window.clearInterval(timerId));
+  }
 
   ngOnInit(): void {
     this.loadDashboard();
@@ -108,6 +116,24 @@ export class AdminHome implements OnInit {
       error: () => {
         this.errorMessage.set('No se han podido cargar los datos de administración.');
         this.isLoading.set(false);
+      },
+    });
+  }
+
+  private refreshTables(): void {
+    if (this.isLoading() || this.isRefreshingTables) {
+      return;
+    }
+
+    this.isRefreshingTables = true;
+
+    this.tablesApiService.findAll().subscribe({
+      next: (tables) => {
+        this.tables.set(tables);
+        this.isRefreshingTables = false;
+      },
+      error: () => {
+        this.isRefreshingTables = false;
       },
     });
   }

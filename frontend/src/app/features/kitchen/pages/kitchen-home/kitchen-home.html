@@ -3,18 +3,13 @@
     <div>
       <p class="kitchen-home__eyebrow">Cocina</p>
       <h1>Panel de comandas</h1>
-      <p>
-        @if (kitchenOrders().length > 0) {
-          {{ kitchenOrders().length }} pedido(s) en cocina, ordenados por llegada.
-        } @else {
-          Sin comandas activas en este momento.
-        }
-      </p>
+      @if (kitchenOrders().length === 0) {
+        <p class="kitchen-home__subtitle">Sin comandas activas en este momento</p>
+      }
     </div>
 
     <div class="kitchen-home__header-actions">
       <span class="kitchen-home__counter">{{ kitchenOrders().length }} en cocina</span>
-      <button type="button" class="kitchen-home__refresh" (click)="loadOrders()">Actualizar</button>
     </div>
   </header>
 

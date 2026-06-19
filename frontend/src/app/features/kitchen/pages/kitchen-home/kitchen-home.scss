@@ -1,6 +1,7 @@
 .kitchen-home {
   display: grid;
-  gap: var(--space-5);
+  align-content: start;
+  gap: var(--space-3);
   min-height: calc(100vh - 4rem);
   margin: calc(var(--space-4) * -1);
   padding: var(--space-4);
@@ -8,11 +9,15 @@
 }
 
 .kitchen-home__header {
+  align-self: start;
   display: flex;
   justify-content: space-between;
-  gap: var(--space-4);
-  align-items: flex-start;
-  padding: var(--space-5);
+  gap: var(--space-3);
+  align-items: center;
+  box-sizing: border-box;
+  height: 4.25rem;
+  overflow: hidden;
+  padding: var(--space-2) var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   background: var(--color-surface);
@@ -20,13 +25,30 @@
 
   h1 {
     margin: 0;
-    font-size: var(--font-size-2xl);
+    font-size: clamp(1.25rem, 3vw, 1.65rem);
+    line-height: 1.1;
   }
+}
 
-  p {
-    margin: var(--space-2) 0 0;
-    color: var(--color-text-muted);
-  }
+.kitchen-home__eyebrow,
+.kitchen-home__subtitle {
+  margin: 0;
+}
+
+.kitchen-home__eyebrow {
+  color: var(--color-primary);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.kitchen-home__subtitle {
+  margin-top: 0.1rem;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  line-height: 1;
 }
 
 .kitchen-home__header-actions {
@@ -38,8 +60,8 @@
 .kitchen-home__counter {
   display: inline-flex;
   align-items: center;
-  min-height: 2.4rem;
-  padding: 0 var(--space-3);
+  min-height: 2rem;
+  padding: 0 var(--space-2);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-full);
   background: var(--color-background);
@@ -48,16 +70,6 @@
   font-weight: 800;
 }
 
-.kitchen-home__eyebrow {
-  margin: 0;
-  color: var(--color-primary);
-  font-size: var(--font-size-sm);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.kitchen-home__refresh,
 .kitchen-home__action {
   border: 0;
   border-radius: var(--radius-lg);
@@ -77,10 +89,6 @@
     cursor: not-allowed;
     opacity: 0.6;
   }
-}
-
-.kitchen-home__refresh {
-  padding: var(--space-3) var(--space-4);
 }
 
 .kitchen-home__action {

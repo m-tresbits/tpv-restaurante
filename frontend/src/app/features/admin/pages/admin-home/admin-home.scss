@@ -91,18 +91,6 @@
   font-size: 1rem;
 }
 
-.admin-home__refresh {
-  flex: 0 0 auto;
-  padding: var(--space-2) var(--space-3);
-  border: 0;
-  border-radius: var(--radius-sm);
-  background: var(--color-primary);
-  color: white;
-  font-size: var(--font-size-sm);
-  font-weight: 700;
-  cursor: pointer;
-}
-
 .admin-home__status,
 .admin-home__error,
 .admin-home__placeholder {
@@ -262,10 +250,6 @@
 
   .admin-home__header {
     flex-direction: column;
-  }
-
-  .admin-home__refresh {
-    width: 100%;
   }
 
   .admin-home__summary {

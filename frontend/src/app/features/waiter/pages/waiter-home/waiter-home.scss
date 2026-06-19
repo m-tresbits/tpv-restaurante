@@ -52,7 +52,6 @@
   margin-top: var(--space-2);
 }
 
-.waiter-home__refresh,
 .waiter-home__primary-action,
 .waiter-home__secondary-action,
 .waiter-home__quantity-action,
@@ -64,16 +63,9 @@
   cursor: pointer;
 }
 
-.waiter-home__refresh,
 .waiter-home__primary-action {
   background: var(--color-primary);
   color: white;
-}
-
-.waiter-home__refresh {
-  flex: 0 0 auto;
-  padding: var(--space-2) var(--space-3);
-  font-size: var(--font-size-sm);
 }
 
 .waiter-home__primary-action,
@@ -88,7 +80,6 @@
   color: var(--color-text);
 }
 
-.waiter-home__refresh:disabled,
 .waiter-home__primary-action:disabled,
 .waiter-home__secondary-action:disabled,
 .waiter-home__product:disabled,
@@ -442,10 +433,6 @@
 @media (max-width: 560px) {
   .waiter-home__header {
     flex-direction: column;
-  }
-
-  .waiter-home__refresh {
-    width: 100%;
   }
 
   .waiter-home__tables {

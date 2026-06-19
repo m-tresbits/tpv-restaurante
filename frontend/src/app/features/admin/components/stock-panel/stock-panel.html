@@ -9,28 +9,19 @@
   <form class="stock-panel__form" [formGroup]="stockForm" (ngSubmit)="upsertStock()">
     <div class="stock-panel__grid">
       <label>
-        Producto
-        <select formControlName="productoId">
-          <option [ngValue]="null">Selecciona un producto</option>
-
-          @for (product of activeProducts(); track product.id) {
-            <option [ngValue]="product.id">
-              {{ product.nombre }}
-            </option>
-          }
-        </select>
-      </label>
-
-      <label>
         Stock actual
         <input type="number" min="0" formControlName="cantidad" />
       </label>
 
-      <button type="submit" [disabled]="isSaving()">Guardar stock</button>
+      <button type="submit" class="stock-panel__submit" [disabled]="isSaving()">
+        Guardar stock
+      </button>
     </div>
 
     @if (stockForm.invalid && stockForm.touched) {
-      <p class="stock-panel__validation">Selecciona un producto y una cantidad válida.</p>
+      <p class="stock-panel__validation">
+        Selecciona una tarjeta de producto y una cantidad válida.
+      </p>
     }
   </form>
 
@@ -40,7 +31,13 @@
 
   <div class="stock-panel__list">
     @for (product of activeProducts(); track product.id) {
-      <article class="stock-panel__item">
+      <button
+        type="button"
+        class="stock-panel__item"
+        [class.stock-panel__item--selected]="isSelected(product)"
+        [attr.aria-pressed]="isSelected(product)"
+        (click)="selectProduct(product)"
+      >
         <div>
           <strong>{{ product.nombre }}</strong>
           <span>{{ product.category.nombre }}</span>
@@ -55,7 +52,7 @@
           <span>{{ stockStatus(product) }}</span>
           <strong>{{ productStock(product) }}</strong>
         </small>
-      </article>
+      </button>
     } @empty {
       <p class="stock-panel__empty">No hay productos activos para gestionar stock.</p>
     }

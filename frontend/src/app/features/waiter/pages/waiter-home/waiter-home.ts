@@ -631,16 +631,17 @@ export class WaiterHome implements OnInit {
     this.isRefreshingWaiterData = true;
 
     forkJoin({
+      tables: this.tablesApiService.findActive(),
       products: this.productsApiService.findAvailable(),
       stock: this.stockApiService.findAll(),
       openOrders: this.ordersApiService.findOpen(),
     }).subscribe({
-      next: ({ products, stock, openOrders }) => {
+      next: ({ tables, products, stock, openOrders }) => {
         if (ignoreSaving || !this.isSaving()) {
           this.products.set(products);
           this.stock.set(this.applyPendingStockReservations(stock));
           this.openOrders.set(openOrders);
-          this.tables.update((tables) => this.reconcileTablesWithOpenOrders(tables, openOrders));
+          this.tables.set(this.reconcileTablesWithOpenOrders(tables, openOrders));
           this.syncSelectedTable(this.tables());
           this.syncActiveOrderFromPolling(openOrders);
         }

@@ -111,6 +111,7 @@
               <button
                 type="button"
                 class="waiter-home__primary-action"
+                [class.waiter-home__menu-action]="isMenuToggleAction(table)"
                 [disabled]="isSaving()"
                 (click)="manageOrder(table)"
               >
@@ -217,18 +218,49 @@
                     </div>
                   </article>
                 } @empty {
-                  <p class="waiter-home__empty">Todavía no hay productos añadidos.</p>
+                  @if (pendingItemsForOrder(order).length === 0) {
+                    <p class="waiter-home__empty">Todavía no hay productos añadidos.</p>
+                  }
+                }
+
+                @for (item of pendingItemsForOrder(order); track item.id) {
+                  <article class="waiter-home__line waiter-home__line--new">
+                    <div>
+                      <strong>{{ item.product.nombre }}</strong>
+                      <span>1 × {{ item.product.precio }} €</span>
+                      <small>Estado: pendiente de enviar</small>
+
+                      @if (item.observaciones) {
+                        <small>Obs.: {{ item.observaciones }}</small>
+                      }
+                    </div>
+
+                    <div class="waiter-home__line-side">
+                      <span>{{ getPendingLineSubtotal(item) }}</span>
+
+                      <div class="waiter-home__line-actions" aria-label="Editar línea pendiente">
+                        <button
+                          type="button"
+                          class="waiter-home__remove-line"
+                          [disabled]="isSaving()"
+                          (click)="removePendingOrderItem(item)"
+                        >
+                          Quitar
+                        </button>
+                      </div>
+                    </div>
+                  </article>
                 }
               </section>
 
               @if (canSendToKitchen(order)) {
                 <button
                   type="button"
-                  class="waiter-home__primary-action"
+                  class="waiter-home__primary-action waiter-home__primary-action--confirm"
                   [disabled]="isSaving()"
                   (click)="sendOrderToKitchen()"
                 >
-                  Enviar a cocina
+                  {{ sendToKitchenLabel(order) }}
                 </button>
               }
 
@@ -236,7 +268,7 @@
                 <div class="waiter-home__order-actions">
                   <button
                     type="button"
-                    class="waiter-home__primary-action"
+                    class="waiter-home__primary-action waiter-home__primary-action--finalize"
                     [disabled]="isSaving()"
                     (click)="closeOrder()"
                   >
@@ -245,7 +277,7 @@
 
                   <button
                     type="button"
-                    class="waiter-home__secondary-action"
+                    class="waiter-home__secondary-action waiter-home__secondary-action--danger"
                     [disabled]="isSaving()"
                     (click)="cancelOrder()"
                   >

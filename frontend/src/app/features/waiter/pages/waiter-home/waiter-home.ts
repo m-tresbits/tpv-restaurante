@@ -11,6 +11,13 @@ import { Product } from '../../../../shared/models/product.model';
 import { ProductStock } from '../../../../shared/models/stock.model';
 import { RestaurantTable, TableStatus } from '../../../../shared/models/table.model';
 
+type PendingOrderItem = {
+  id: number;
+  orderId: number;
+  product: Product;
+  observaciones?: string;
+};
+
 @Component({
   selector: 'app-waiter-home',
   templateUrl: './waiter-home.html',
@@ -25,6 +32,7 @@ export class WaiterHome implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   private isRefreshingWaiterData = false;
+  private nextPendingOrderItemId = -1;
 
   protected readonly tables = signal<RestaurantTable[]>([]);
   protected readonly products = signal<Product[]>([]);
@@ -32,6 +40,7 @@ export class WaiterHome implements OnInit {
   protected readonly openOrders = signal<Order[]>([]);
   protected readonly selectedTable = signal<RestaurantTable | null>(null);
   protected readonly activeOrder = signal<Order | null>(null);
+  protected readonly pendingOrderItems = signal<PendingOrderItem[]>([]);
   protected readonly acknowledgedReadyDetailIds = signal<Set<number>>(new Set());
   protected readonly isMenuVisible = signal(false);
   protected readonly nextProductObservation = signal('');
@@ -96,15 +105,18 @@ export class WaiterHome implements OnInit {
       return 'Abrir pedido activo';
     }
 
-    if (this.isMenuVisible()) {
-      return 'Ocultar carta';
-    }
+    return this.isMenuVisible() ? 'CARTA -' : 'CARTA +';
+  }
 
-    if (order.estado === 'EN_COCINA') {
-      return 'Añadir más productos';
-    }
+  protected isMenuToggleAction(table: RestaurantTable): boolean {
+    const order = this.findOpenOrderByTable(table.id);
 
-    return 'Mostrar carta';
+    return (
+      this.selectedTable()?.id === table.id &&
+      this.activeOrder()?.id === order?.id &&
+      !!order &&
+      this.canAddProducts(order)
+    );
   }
 
   protected canEditOrder(order: Order): boolean {
@@ -128,7 +140,17 @@ export class WaiterHome implements OnInit {
   }
 
   protected canSendToKitchen(order: Order): boolean {
-    return order.estado === 'ABIERTO' && this.orderDetails(order).length > 0;
+    const pendingItemsCount = this.pendingItemsForOrder(order).length;
+
+    if (order.estado === 'ABIERTO') {
+      return this.orderDetails(order).length + pendingItemsCount > 0;
+    }
+
+    return order.estado === 'EN_COCINA' && pendingItemsCount > 0;
+  }
+
+  protected sendToKitchenLabel(order: Order): string {
+    return order.estado === 'EN_COCINA' ? 'Enviar nuevos productos a cocina' : 'Enviar a cocina';
   }
 
   protected productsSectionTitle(order: Order): string {
@@ -154,21 +176,7 @@ export class WaiterHome implements OnInit {
   }
 
   protected orderDetails(order: Order): OrderDetail[] {
-    const priority: Record<OrderDetailStatus, number> = {
-      LISTO: 1,
-      EN_PREPARACION: 2,
-      PENDIENTE: 3,
-      SERVIDO: 4,
-      CANCELADO: 5,
-    };
-
     return [...(order.details ?? [])].sort((firstDetail, secondDetail) => {
-      const priorityDifference = priority[firstDetail.estado] - priority[secondDetail.estado];
-
-      if (priorityDifference !== 0) {
-        return priorityDifference;
-      }
-
       const firstCreatedAt = new Date(firstDetail.createdAt).getTime();
       const secondCreatedAt = new Date(secondDetail.createdAt).getTime();
 
@@ -206,6 +214,10 @@ export class WaiterHome implements OnInit {
 
   protected canServeDetail(order: Order, detail: OrderDetail): boolean {
     return order.estado !== 'CERRADO' && order.estado !== 'CANCELADO' && detail.estado === 'LISTO';
+  }
+
+  protected pendingItemsForOrder(order: Pick<Order, 'id'>): PendingOrderItem[] {
+    return this.pendingOrderItems().filter((item) => item.orderId === order.id);
   }
 
   protected availableStock(product: Pick<Product, 'id'>): number {
@@ -317,40 +329,31 @@ export class WaiterHome implements OnInit {
 
     const observation = this.nextProductObservation().trim();
 
-    this.ordersApiService
-      .addItem(order.id, {
-        productoId: product.id,
-        cantidad: 1,
+    this.pendingOrderItems.update((items) => [
+      ...items,
+      {
+        id: this.nextPendingOrderItemId--,
+        orderId: order.id,
+        product,
         ...(observation ? { observaciones: observation } : {}),
-      })
-      .subscribe({
-        next: (updatedOrder) => {
-          this.upsertOpenOrder(updatedOrder);
-          this.activeOrder.set(updatedOrder);
-          this.replaceTable(updatedOrder.table);
-          this.selectedTable.set(updatedOrder.table);
-          this.decreaseProductStock(product.id);
-          this.nextProductObservation.set('');
-          this.isSaving.set(false);
-        },
-        error: (error: unknown) => {
-          const message = this.getApiErrorMessage(
-            error,
-            'No se ha podido añadir el producto al pedido.',
-          );
-
-          this.errorMessage.set(message);
-          this.isSaving.set(false);
-
-          if (this.isStockInsufficientMessage(message)) {
-            this.refreshWaiterData(false, true);
-          }
-        },
-      });
+      },
+    ]);
+    this.decreaseProductStock(product.id);
+    this.nextProductObservation.set('');
+    this.isSaving.set(false);
   }
 
   protected updateNextProductObservation(value: string): void {
     this.nextProductObservation.set(value);
+  }
+
+  protected removePendingOrderItem(item: PendingOrderItem): void {
+    if (this.isSaving()) {
+      return;
+    }
+
+    this.pendingOrderItems.update((items) => items.filter((pendingItem) => pendingItem.id !== item.id));
+    this.increaseProductStock(item.product.id, 1);
   }
 
   protected removeDetail(detail: OrderDetail): void {
@@ -380,6 +383,10 @@ export class WaiterHome implements OnInit {
 
   protected getLineSubtotal(detail: OrderDetail): string {
     return `${(detail.cantidad * Number(detail.precioUnitario)).toFixed(2)} €`;
+  }
+
+  protected getPendingLineSubtotal(item: PendingOrderItem): string {
+    return `${Number(item.product.precio).toFixed(2)} €`;
   }
 
   protected markDetailServed(detail: OrderDetail): void {
@@ -422,12 +429,24 @@ export class WaiterHome implements OnInit {
     this.isSaving.set(true);
     this.errorMessage.set(null);
 
+    if (this.pendingItemsForOrder(order).length > 0) {
+      this.sendPendingItemsToKitchen(order);
+      return;
+    }
+
+    this.sendOrderToKitchenRequest(order);
+  }
+
+  private sendOrderToKitchenRequest(order: Order): void {
     this.ordersApiService.sendToKitchen(order.id).subscribe({
       next: (updatedOrder) => {
         this.upsertOpenOrder(updatedOrder);
         this.activeOrder.set(updatedOrder);
         this.replaceTable(updatedOrder.table);
         this.selectedTable.set(updatedOrder.table);
+        this.pendingOrderItems.update((items) =>
+          items.filter((pendingItem) => pendingItem.orderId !== updatedOrder.id),
+        );
         this.isMenuVisible.set(false);
         this.isSaving.set(false);
       },
@@ -438,6 +457,61 @@ export class WaiterHome implements OnInit {
         this.isSaving.set(false);
       },
     });
+  }
+
+  private sendPendingItemsToKitchen(order: Order): void {
+    const pendingItems = this.pendingItemsForOrder(order);
+
+    if (pendingItems.length === 0) {
+      this.isSaving.set(false);
+      return;
+    }
+
+    this.sendPendingItemToKitchen(order, pendingItems, 0);
+  }
+
+  private sendPendingItemToKitchen(order: Order, pendingItems: PendingOrderItem[], index: number): void {
+    const item = pendingItems[index];
+
+    if (!item) {
+      this.pendingOrderItems.update((items) =>
+        items.filter((pendingItem) => pendingItem.orderId !== order.id),
+      );
+
+      if (order.estado === 'ABIERTO') {
+        this.sendOrderToKitchenRequest(order);
+        return;
+      }
+
+      this.isMenuVisible.set(false);
+      this.isSaving.set(false);
+      return;
+    }
+
+    this.ordersApiService
+      .addItem(order.id, {
+        productoId: item.product.id,
+        cantidad: 1,
+        ...(item.observaciones ? { observaciones: item.observaciones } : {}),
+      })
+      .subscribe({
+        next: (updatedOrder) => {
+          this.syncUpdatedOrder(updatedOrder);
+          this.sendPendingItemToKitchen(updatedOrder, pendingItems, index + 1);
+        },
+        error: (error: unknown) => {
+          const sentItemIds = new Set(pendingItems.slice(0, index).map((sentItem) => sentItem.id));
+
+          this.pendingOrderItems.update((items) =>
+            items.filter((pendingItem) => !sentItemIds.has(pendingItem.id)),
+          );
+          this.errorMessage.set(
+            this.getApiErrorMessage(error, 'No se han podido enviar los nuevos productos a cocina.'),
+          );
+          this.refreshWaiterData(false, true);
+          this.isSaving.set(false);
+        },
+      });
   }
 
   protected closeOrder(): void {
@@ -520,7 +594,7 @@ export class WaiterHome implements OnInit {
         this.openOrders.set(openOrders);
         this.tables.set(this.reconcileTablesWithOpenOrders(tables, openOrders));
         this.products.set(products);
-        this.stock.set(stock);
+        this.stock.set(this.applyPendingStockReservations(stock));
         this.syncSelectedTable(this.tables());
         this.syncActiveOrder(openOrders);
         this.isLoading.set(false);
@@ -549,7 +623,7 @@ export class WaiterHome implements OnInit {
       next: ({ products, stock, openOrders }) => {
         if (ignoreSaving || !this.isSaving()) {
           this.products.set(products);
-          this.stock.set(stock);
+          this.stock.set(this.applyPendingStockReservations(stock));
           this.openOrders.set(openOrders);
           this.tables.update((tables) => this.reconcileTablesWithOpenOrders(tables, openOrders));
           this.syncSelectedTable(this.tables());
@@ -604,6 +678,9 @@ export class WaiterHome implements OnInit {
 
   private finishOrder(order: Order): void {
     this.openOrders.update((orders) => orders.filter((openOrder) => openOrder.id !== order.id));
+    this.pendingOrderItems.update((items) =>
+      items.filter((pendingItem) => pendingItem.orderId !== order.id),
+    );
     this.activeOrder.set(null);
     this.isMenuVisible.set(false);
     this.replaceTable(order.table);
@@ -644,6 +721,18 @@ export class WaiterHome implements OnInit {
         };
       }),
     );
+  }
+
+  private applyPendingStockReservations(stock: ProductStock[]): ProductStock[] {
+    const reservedByProduct = this.pendingOrderItems().reduce((reserved, item) => {
+      reserved.set(item.product.id, (reserved.get(item.product.id) ?? 0) + 1);
+      return reserved;
+    }, new Map<number, number>());
+
+    return stock.map((stockItem) => ({
+      ...stockItem,
+      cantidad: Math.max(stockItem.cantidad - (reservedByProduct.get(stockItem.product.id) ?? 0), 0),
+    }));
   }
 
   private syncUpdatedOrder(updatedOrder: Order): void {

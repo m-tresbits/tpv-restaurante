@@ -174,7 +174,33 @@ export class KitchenHome {
   }
 
   protected getKitchenDetails(order: Order): OrderDetail[] {
-    return order.details.filter((detail) => detail.estado !== 'SERVIDO');
+    const statusPriority: Record<OrderDetailStatus, number> = {
+      EN_PREPARACION: 1,
+      PENDIENTE: 2,
+      LISTO: 3,
+      SERVIDO: 4,
+      CANCELADO: 4,
+    };
+
+    return order.details
+      .filter((detail) => detail.estado !== 'SERVIDO')
+      .sort((firstDetail, secondDetail) => {
+        const firstPriority = statusPriority[firstDetail.estado];
+        const secondPriority = statusPriority[secondDetail.estado];
+
+        if (firstPriority !== secondPriority) {
+          return firstPriority - secondPriority;
+        }
+
+        const firstCreatedAt = new Date(firstDetail.createdAt).getTime();
+        const secondCreatedAt = new Date(secondDetail.createdAt).getTime();
+
+        if (firstCreatedAt !== secondCreatedAt) {
+          return firstCreatedAt - secondCreatedAt;
+        }
+
+        return firstDetail.id - secondDetail.id;
+      });
   }
 
   protected isOrderReady(order: Order): boolean {
@@ -184,8 +210,21 @@ export class KitchenHome {
   }
 
   protected getDetailTone(productName: string, categoryName?: string | null): string {
-    const text = `${productName} ${categoryName}`.toLowerCase();
+    const categoryText = this.normalizeToneText(categoryName ?? '');
+    const productText = this.normalizeToneText(productName);
 
+    return this.resolveDetailTone(categoryText) ?? this.resolveDetailTone(productText) ?? 'default';
+  }
+
+  private normalizeToneText(text: string): string {
+    return text
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
+  }
+
+  private resolveDetailTone(text: string): string | null {
     if (text.includes('hamburg') || text.includes('burger')) {
       return 'burger';
     }
@@ -194,7 +233,14 @@ export class KitchenHome {
       return 'pizza';
     }
 
-    if (text.includes('carne') || text.includes('entrecot') || text.includes('pollo')) {
+    if (
+      text.includes('carne') ||
+      text.includes('carnes') ||
+      text.includes('cerdo') ||
+      text.includes('asado') ||
+      text.includes('asados') ||
+      text.includes('pollo')
+    ) {
       return 'meat';
     }
 
@@ -202,18 +248,24 @@ export class KitchenHome {
       text.includes('entrante') ||
       text.includes('tapa') ||
       text.includes('racion') ||
-      text.includes('ración') ||
+      text.includes('raciones') ||
       text.includes('patata') ||
-      text.includes('guarnicion') ||
-      text.includes('guarnición')
+      text.includes('patatas') ||
+      text.includes('guarnicion')
     ) {
-      return 'starter';
+      return 'side';
     }
 
-    if (text.includes('ensalada') || text.includes('vegetal') || text.includes('verdura')) {
+    if (
+      text.includes('ensalada') ||
+      text.includes('ensaladas') ||
+      text.includes('vegetal') ||
+      text.includes('verdura') ||
+      text.includes('verduras')
+    ) {
       return 'salad';
     }
 
-    return 'neutral';
+    return null;
   }
 }

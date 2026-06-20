@@ -214,6 +214,8 @@
 }
 
 .kitchen-home__detail {
+  --kitchen-detail-accent: #cbd5e1;
+
   display: grid;
   grid-template-columns: 1fr auto;
   gap: var(--space-4);
@@ -222,24 +224,31 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: #ffffff;
-  border-left: 0.35rem solid #cbd5e1;
+  border-left: 0.35rem solid var(--kitchen-detail-accent);
 }
 
-.kitchen-home__detail--burger,
 .kitchen-home__detail--meat {
-  border-left-color: #c4b5fd;
+  --kitchen-detail-accent: #a16207;
+}
+
+.kitchen-home__detail--burger {
+  --kitchen-detail-accent: #0f766e;
 }
 
 .kitchen-home__detail--pizza {
-  border-left-color: #93c5fd;
+  --kitchen-detail-accent: #fb923c;
 }
 
 .kitchen-home__detail--salad {
-  border-left-color: #5eead4;
+  --kitchen-detail-accent: #86efac;
 }
 
-.kitchen-home__detail--starter {
-  border-left-color: #fdba74;
+.kitchen-home__detail--side {
+  --kitchen-detail-accent: #94a3b8;
+}
+
+.kitchen-home__detail--default {
+  --kitchen-detail-accent: #cbd5e1;
 }
 
 .kitchen-home__detail--actionable {
@@ -248,16 +257,18 @@
 
 .kitchen-home__detail--actionable:hover {
   border-color: #94a3b8;
+  border-left-color: var(--kitchen-detail-accent);
 }
 
 .kitchen-home__detail--preparing {
   border-color: #fde68a;
+  border-left-color: var(--kitchen-detail-accent);
   background: #fffbeb;
 }
 
 .kitchen-home__detail--ready {
   border-color: #bbf7d0;
-  border-left-color: #22c55e;
+  border-left-color: var(--kitchen-detail-accent);
   background: #f0fdf4;
 }
 

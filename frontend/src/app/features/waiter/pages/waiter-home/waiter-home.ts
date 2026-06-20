@@ -176,7 +176,22 @@ export class WaiterHome implements OnInit {
   }
 
   protected orderDetails(order: Order): OrderDetail[] {
+    const statusPriority: Record<OrderDetailStatus, number> = {
+      LISTO: 1,
+      EN_PREPARACION: 2,
+      PENDIENTE: 3,
+      SERVIDO: 4,
+      CANCELADO: 5,
+    };
+
     return [...(order.details ?? [])].sort((firstDetail, secondDetail) => {
+      const firstPriority = statusPriority[firstDetail.estado];
+      const secondPriority = statusPriority[secondDetail.estado];
+
+      if (firstPriority !== secondPriority) {
+        return firstPriority - secondPriority;
+      }
+
       const firstCreatedAt = new Date(firstDetail.createdAt).getTime();
       const secondCreatedAt = new Date(secondDetail.createdAt).getTime();
 

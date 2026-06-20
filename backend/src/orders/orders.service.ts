@@ -48,11 +48,17 @@ export class OrdersService {
         table: true,
         user: true,
         details: {
-          product: true,
+          product: {
+            category: true,
+          },
         },
       },
       order: {
         fechaCreacion: 'DESC',
+        details: {
+          createdAt: 'ASC',
+          id: 'ASC',
+        },
       },
     });
   }
@@ -66,7 +72,15 @@ export class OrdersService {
         table: true,
         user: true,
         details: {
-          product: true,
+          product: {
+            category: true,
+          },
+        },
+      },
+      order: {
+        details: {
+          createdAt: 'ASC',
+          id: 'ASC',
         },
       },
     });
@@ -369,7 +383,9 @@ export class OrdersService {
         },
       },
       relations: {
-        product: true,
+        product: {
+          category: true,
+        },
       },
     });
 

@@ -8,6 +8,7 @@ La base de datos utilizada en el proyecto es PostgreSQL, alojada en Supabase com
 
 - `schema.sql`: define las tablas, relaciones y restricciones principales de la base de datos.
 - `seed.sql`: inserta los datos iniciales necesarios para arrancar la aplicación.
+- `reset-demo.sql`: reinicia los datos operativos de demo conservando roles y usuarios.
 
 ## Modelo inicial
 
@@ -32,7 +33,7 @@ El sistema se inicializa con tres roles base:
 
 También se crean usuarios iniciales asociados a estos roles para poder probar el flujo básico de autenticación y acceso por perfil.
 
-Posteriormente, la gestión de usuarios deberá realizarse desde la propia aplicación, permitiendo que el usuario administrador cree nuevos usuarios, especialmente camareros.
+La gestión completa de usuarios desde la aplicación no forma parte del alcance actual y queda como posible mejora futura.
 
 ## Seguridad de PIN
 

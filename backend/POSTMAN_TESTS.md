@@ -1,6 +1,6 @@
 # API Tests
 
-Pruebas rápidas para comprobar el backend en Postman.
+Pruebas rapidas para comprobar el backend en Postman.
 
 Usar `Authorization > Bearer Token` en todas las rutas protegidas.
 
@@ -8,11 +8,10 @@ Variables recomendadas:
 
 ```text
 baseUrl = http://localhost:3000
-fecha = 2026-06-16
 productId = id real de un producto
 tableId = id real de una mesa libre
 orderId = id devuelto por POST /orders
-detailId = id devuelto al añadir un producto al pedido
+detailId = id devuelto al anadir un producto al pedido
 ```
 
 ---
@@ -60,21 +59,47 @@ POST {{baseUrl}}/auth/login
 
 ---
 
+## Health
+
+Comprobar estado del backend.
+
+```http
+GET {{baseUrl}}/health
+```
+
+---
+
+## Roles y usuarios
+
+ADMIN obtiene los roles disponibles.
+
+```http
+GET {{baseUrl}}/roles
+```
+
+ADMIN obtiene los usuarios iniciales registrados.
+
+```http
+GET {{baseUrl}}/users
+```
+
+---
+
 ## Categories
 
-ADMIN obtiene todas las categorías.
+ADMIN obtiene todas las categorias.
 
 ```http
 GET {{baseUrl}}/categories
 ```
 
-ADMIN o CAMARERO obtiene categorías activas.
+ADMIN o CAMARERO obtiene categorias activas.
 
 ```http
 GET {{baseUrl}}/categories/active
 ```
 
-ADMIN crea una categoría.
+ADMIN crea una categoria.
 
 ```http
 POST {{baseUrl}}/categories
@@ -86,7 +111,7 @@ POST {{baseUrl}}/categories
 }
 ```
 
-ADMIN edita una categoría.
+ADMIN edita una categoria.
 
 ```http
 PATCH {{baseUrl}}/categories/6
@@ -98,13 +123,13 @@ PATCH {{baseUrl}}/categories/6
 }
 ```
 
-ADMIN desactiva una categoría.
+ADMIN desactiva una categoria.
 
 ```http
 PATCH {{baseUrl}}/categories/6/deactivate
 ```
 
-ADMIN activa una categoría.
+ADMIN activa una categoria.
 
 ```http
 PATCH {{baseUrl}}/categories/6/activate
@@ -156,7 +181,7 @@ PATCH {{baseUrl}}/products/{{productId}}
 ```json
 {
   "precio": 10.5,
-  "descripcion": "Hamburguesa clásica con queso"
+  "descripcion": "Hamburguesa clasica con queso"
 }
 ```
 
@@ -247,35 +272,21 @@ PATCH {{baseUrl}}/tables/{{tableId}}/status
 
 ## Stock
 
-ADMIN obtiene todo el stock.
+ADMIN, CAMARERO o COCINA obtiene el stock actual.
 
 ```http
 GET {{baseUrl}}/stock
 ```
 
-ADMIN, CAMARERO o COCINA obtiene stock por fecha.
+ADMIN actualiza el stock actual de un producto.
 
 ```http
-GET {{baseUrl}}/stock/date/{{fecha}}
-```
-
-ADMIN, CAMARERO o COCINA obtiene stock de un producto en una fecha.
-
-```http
-GET {{baseUrl}}/stock/product/{{productId}}/date/{{fecha}}
-```
-
-ADMIN crea o actualiza stock diario.
-
-```http
-POST {{baseUrl}}/stock/daily
+PATCH {{baseUrl}}/stock/{{productId}}
 ```
 
 ```json
 {
-  "productoId": {{productId}},
-  "fecha": "{{fecha}}",
-  "cantidadInicial": 20
+  "cantidad": 20
 }
 ```
 
@@ -283,7 +294,7 @@ POST {{baseUrl}}/stock/daily
 
 ## Orders
 
-Antes de añadir productos, debe existir stock diario para el producto y la fecha del pedido.
+Antes de anadir productos, debe existir stock configurado para el producto.
 
 CAMARERO abre un pedido en una mesa libre.
 
@@ -299,7 +310,7 @@ POST {{baseUrl}}/orders
 
 Guardar el `id` de la respuesta como `orderId`.
 
-CAMARERO añade un producto al pedido.
+CAMARERO anade un producto al pedido.
 
 ```http
 POST {{baseUrl}}/orders/{{orderId}}/items
@@ -313,15 +324,33 @@ POST {{baseUrl}}/orders/{{orderId}}/items
 }
 ```
 
-Guardar el `id` de la línea añadida como `detailId`.
+Guardar el `id` de la linea anadida como `detailId`.
 
 Comprobar que el stock ha bajado.
 
 ```http
-GET {{baseUrl}}/stock/product/{{productId}}/date/{{fecha}}
+GET {{baseUrl}}/stock
 ```
 
-CAMARERO envía el pedido a cocina.
+CAMARERO modifica la cantidad de una linea de pedido abierto.
+
+```http
+PATCH {{baseUrl}}/orders/{{orderId}}/items/{{detailId}}/quantity
+```
+
+```json
+{
+  "cantidad": 3
+}
+```
+
+CAMARERO elimina una linea de pedido abierto.
+
+```http
+DELETE {{baseUrl}}/orders/{{orderId}}/items/{{detailId}}
+```
+
+CAMARERO envia el pedido a cocina.
 
 ```http
 POST {{baseUrl}}/orders/{{orderId}}/send-to-kitchen
@@ -339,7 +368,7 @@ ADMIN, CAMARERO o COCINA obtiene un pedido.
 GET {{baseUrl}}/orders/{{orderId}}
 ```
 
-COCINA marca una línea en preparación.
+COCINA marca una linea en preparacion.
 
 ```http
 PATCH {{baseUrl}}/orders/{{orderId}}/items/{{detailId}}/status
@@ -351,7 +380,7 @@ PATCH {{baseUrl}}/orders/{{orderId}}/items/{{detailId}}/status
 }
 ```
 
-COCINA marca una línea como lista.
+COCINA marca una linea como lista.
 
 ```http
 PATCH {{baseUrl}}/orders/{{orderId}}/items/{{detailId}}/status
@@ -363,7 +392,7 @@ PATCH {{baseUrl}}/orders/{{orderId}}/items/{{detailId}}/status
 }
 ```
 
-CAMARERO marca una línea como servida.
+CAMARERO marca una linea como servida.
 
 ```http
 PATCH {{baseUrl}}/orders/{{orderId}}/items/{{detailId}}/status
@@ -389,13 +418,13 @@ ADMIN o CAMARERO cancela un pedido.
 PATCH {{baseUrl}}/orders/{{orderId}}/cancel
 ```
 
-Al cancelar un pedido, el stock se restaura. Para probar cancelación, usar un pedido distinto al cerrado.
+Al cancelar un pedido, el stock se restaura. Para probar cancelacion, usar un pedido distinto al cerrado.
 
 ---
 
 ## Negative tests
 
-CAMARERO intenta crear una categoría. Resultado esperado: `403 Forbidden`.
+CAMARERO intenta crear una categoria. Resultado esperado: `403 Forbidden`.
 
 ```http
 POST {{baseUrl}}/categories
@@ -416,7 +445,7 @@ POST {{baseUrl}}/products
 ```json
 {
   "nombre": "Producto prueba",
-  "descripcion": "No debería crearse",
+  "descripcion": "No deberia crearse",
   "precio": 5,
   "categoriaId": 1
 }
@@ -435,45 +464,27 @@ POST {{baseUrl}}/tables
 }
 ```
 
-CAMARERO intenta crear stock. Resultado esperado: `403 Forbidden`.
+CAMARERO intenta actualizar stock. Resultado esperado: `403 Forbidden`.
 
 ```http
-POST {{baseUrl}}/stock/daily
+PATCH {{baseUrl}}/stock/{{productId}}
 ```
 
 ```json
 {
-  "productoId": {{productId}},
-  "fecha": "{{fecha}}",
-  "cantidadInicial": 20
+  "cantidad": 20
 }
 ```
 
-ADMIN intenta crear stock con fecha incorrecta. Resultado esperado: `400 Bad Request`.
+ADMIN intenta actualizar stock con cantidad negativa. Resultado esperado: `400 Bad Request`.
 
 ```http
-POST {{baseUrl}}/stock/daily
+PATCH {{baseUrl}}/stock/{{productId}}
 ```
 
 ```json
 {
-  "productoId": {{productId}},
-  "fecha": "16-06-2026",
-  "cantidadInicial": 20
-}
-```
-
-ADMIN intenta crear stock con cantidad negativa. Resultado esperado: `400 Bad Request`.
-
-```http
-POST {{baseUrl}}/stock/daily
-```
-
-```json
-{
-  "productoId": {{productId}},
-  "fecha": "{{fecha}}",
-  "cantidadInicial": -1
+  "cantidad": -1
 }
 ```
 
@@ -501,7 +512,7 @@ POST {{baseUrl}}/orders
 }
 ```
 
-COCINA intenta añadir productos a un pedido. Resultado esperado: `403 Forbidden`.
+COCINA intenta anadir productos a un pedido. Resultado esperado: `403 Forbidden`.
 
 ```http
 POST {{baseUrl}}/orders/{{orderId}}/items
@@ -514,7 +525,7 @@ POST {{baseUrl}}/orders/{{orderId}}/items
 }
 ```
 
-CAMARERO intenta añadir un producto sin stock diario configurado. Resultado esperado: `400 Bad Request`.
+CAMARERO intenta anadir un producto sin stock configurado. Resultado esperado: `400 Bad Request`.
 
 ```http
 POST {{baseUrl}}/orders/{{orderId}}/items
@@ -522,13 +533,13 @@ POST {{baseUrl}}/orders/{{orderId}}/items
 
 ```json
 {
-  "productoId": 2,
+  "productoId": 999,
   "cantidad": 1,
   "observaciones": "Sin stock configurado"
 }
 ```
 
-CAMARERO intenta añadir más cantidad que el stock disponible. Resultado esperado: `400 Bad Request`.
+CAMARERO intenta anadir mas cantidad que el stock disponible. Resultado esperado: `400 Bad Request`.
 
 ```http
 POST {{baseUrl}}/orders/{{orderId}}/items
@@ -550,21 +561,21 @@ Las pruebas de stock insuficiente o sin stock deben hacerse con un pedido en est
 
 1. Login ADMIN.
 2. Consultar productos y mesas.
-3. Crear stock diario para `productId` y `fecha`.
+3. Actualizar stock actual de `productId` si es necesario.
 4. Login CAMARERO.
 5. Crear pedido y guardar `orderId`.
-6. Añadir producto y guardar `detailId`.
+6. Anadir producto y guardar `detailId`.
 7. Comprobar que el stock baja.
 8. Enviar pedido a cocina.
 9. Login COCINA.
-10. Marcar línea como `EN_PREPARACION`.
-11. Marcar línea como `LISTO`.
+10. Marcar linea como `EN_PREPARACION`.
+11. Marcar linea como `LISTO`.
 12. Login CAMARERO.
-13. Marcar línea como `SERVIDO`.
+13. Marcar linea como `SERVIDO`.
 14. Cerrar pedido.
 15. Comprobar que la mesa queda `LIBRE`.
 
-Para probar cancelación, crear otro pedido, añadir producto y cancelar. El stock debe restaurarse.
+Para probar cancelacion, crear otro pedido, anadir producto y cancelar. El stock debe restaurarse.
 
 ---
 
@@ -572,8 +583,8 @@ Para probar cancelación, crear otro pedido, añadir producto y cancelar. El sto
 
 No asumir ids fijos. Usar siempre los ids reales devueltos por la API.
 
-`401 Unauthorized`: falta token o el token no es válido.
+`401 Unauthorized`: falta token o el token no es valido.
 
-`403 Forbidden`: el usuario tiene token válido, pero no tiene permisos.
+`403 Forbidden`: el usuario tiene token valido, pero no tiene permisos.
 
-`400 Bad Request`: la petición no cumple validaciones o reglas de negocio.
+`400 Bad Request`: la peticion no cumple validaciones o reglas de negocio.

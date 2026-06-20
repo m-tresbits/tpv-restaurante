@@ -159,3 +159,53 @@ FROM
     productos p
 WHERE
     p.nombre = 'Burger vegetal' ON CONFLICT (producto_id) DO NOTHING;
+
+INSERT INTO
+    stock (producto_id, cantidad)
+SELECT
+    p.id,
+    18
+FROM
+    productos p
+WHERE
+    p.nombre = 'Pizza 4 quesos' ON CONFLICT (producto_id) DO NOTHING;
+
+INSERT INTO
+    stock (producto_id, cantidad)
+SELECT
+    p.id,
+    0
+FROM
+    productos p
+WHERE
+    p.nombre = 'Pizza BBQ' ON CONFLICT (producto_id) DO NOTHING;
+
+INSERT INTO
+    stock (producto_id, cantidad)
+SELECT
+    p.id,
+    5
+FROM
+    productos p
+WHERE
+    p.nombre = 'Cerdo asado' ON CONFLICT (producto_id) DO NOTHING;
+
+INSERT INTO
+    stock (producto_id, cantidad)
+SELECT
+    p.id,
+    30
+FROM
+    productos p
+WHERE
+    p.nombre = 'Patatas fritas' ON CONFLICT (producto_id) DO NOTHING;
+
+INSERT INTO
+    stock (producto_id, cantidad)
+SELECT
+    p.id,
+    14
+FROM
+    productos p
+WHERE
+    p.nombre = 'Ensalada' ON CONFLICT (producto_id) DO NOTHING;

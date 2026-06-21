@@ -1,5 +1,12 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  OnInit,
+  inject,
+  signal,
+} from '@angular/core';
 import { forkJoin } from 'rxjs';
 
 import { OrdersApiService } from '../../../../core/api/services/orders-api.service';
@@ -222,9 +229,7 @@ export class WaiterHome implements OnInit {
       return false;
     }
 
-    return this.getReadyDetails(order).some(
-      (detail) => !this.acknowledgedReadyDetailIds().has(detail.id),
-    );
+    return this.getReadyDetails(order).length > 0;
   }
 
   protected canServeDetail(order: Order, detail: OrderDetail): boolean {
@@ -367,7 +372,9 @@ export class WaiterHome implements OnInit {
       return;
     }
 
-    this.pendingOrderItems.update((items) => items.filter((pendingItem) => pendingItem.id !== item.id));
+    this.pendingOrderItems.update((items) =>
+      items.filter((pendingItem) => pendingItem.id !== item.id),
+    );
     this.increaseProductStock(item.product.id, 1);
   }
 
@@ -485,7 +492,11 @@ export class WaiterHome implements OnInit {
     this.sendPendingItemToKitchen(order, pendingItems, 0);
   }
 
-  private sendPendingItemToKitchen(order: Order, pendingItems: PendingOrderItem[], index: number): void {
+  private sendPendingItemToKitchen(
+    order: Order,
+    pendingItems: PendingOrderItem[],
+    index: number,
+  ): void {
     const item = pendingItems[index];
 
     if (!item) {
@@ -521,7 +532,10 @@ export class WaiterHome implements OnInit {
             items.filter((pendingItem) => !sentItemIds.has(pendingItem.id)),
           );
           this.errorMessage.set(
-            this.getApiErrorMessage(error, 'No se han podido enviar los nuevos productos a cocina.'),
+            this.getApiErrorMessage(
+              error,
+              'No se han podido enviar los nuevos productos a cocina.',
+            ),
           );
           this.refreshWaiterData(false, true);
           this.isSaving.set(false);
@@ -747,7 +761,10 @@ export class WaiterHome implements OnInit {
 
     return stock.map((stockItem) => ({
       ...stockItem,
-      cantidad: Math.max(stockItem.cantidad - (reservedByProduct.get(stockItem.product.id) ?? 0), 0),
+      cantidad: Math.max(
+        stockItem.cantidad - (reservedByProduct.get(stockItem.product.id) ?? 0),
+        0,
+      ),
     }));
   }
 
